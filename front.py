@@ -123,17 +123,17 @@ class Ui_MainWindow(object):
         self.pg_acao = QtWidgets.QWidget()
         self.pg_acao.setObjectName("pg_acao")
         self.txt_acaoPreventiva = QtWidgets.QTextEdit(self.pg_acao)
-        self.txt_acaoPreventiva.setGeometry(QtCore.QRect(120, 80, 561, 411))
+        self.txt_acaoPreventiva.setGeometry(QtCore.QRect(120, 110, 561, 411))
         self.txt_acaoPreventiva.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.txt_acaoPreventiva.setObjectName("txt_acaoPreventiva")
         self.fr_topbar = QtWidgets.QFrame(self.pg_acao)
-        self.fr_topbar.setGeometry(QtCore.QRect(120, 10, 561, 51))
+        self.fr_topbar.setGeometry(QtCore.QRect(120, 10, 561, 81))
         self.fr_topbar.setStyleSheet("")
         self.fr_topbar.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.fr_topbar.setFrameShadow(QtWidgets.QFrame.Raised)
         self.fr_topbar.setObjectName("fr_topbar")
         self.btn_iniciarAcao = QtWidgets.QPushButton(self.fr_topbar)
-        self.btn_iniciarAcao.setGeometry(QtCore.QRect(430, 10, 111, 31))
+        self.btn_iniciarAcao.setGeometry(QtCore.QRect(430, 23, 111, 31))
         self.btn_iniciarAcao.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.btn_iniciarAcao.setStyleSheet("QPushButton{\n"
 "    color: rgb(255, 255, 255);\n"
@@ -145,46 +145,94 @@ class Ui_MainWindow(object):
 "QPushButton:hover{background-color: #acacac; color:black; border:2px solid  rgb(0, 80, 121);}")
         self.btn_iniciarAcao.setObjectName("btn_iniciarAcao")
         self.lb_agrotoxicoAcao = QtWidgets.QLabel(self.fr_topbar)
-        self.lb_agrotoxicoAcao.setGeometry(QtCore.QRect(10, 20, 73, 18))
+        self.lb_agrotoxicoAcao.setGeometry(QtCore.QRect(20, 50, 73, 18))
         self.lb_agrotoxicoAcao.setStyleSheet("font: 75 8pt \"MS Shell Dlg 2\";\n"
 "font: 11pt \"MS Shell Dlg 2\";")
         self.lb_agrotoxicoAcao.setObjectName("lb_agrotoxicoAcao")
         self.cb_agrotoxico = QtWidgets.QComboBox(self.fr_topbar)
-        self.cb_agrotoxico.setGeometry(QtCore.QRect(100, 20, 141, 21))
+        self.cb_agrotoxico.setGeometry(QtCore.QRect(100, 50, 141, 21))
         self.cb_agrotoxico.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.cb_agrotoxico.setObjectName("cb_agrotoxico")
+        self.lb_doencas = QtWidgets.QLabel(self.fr_topbar)
+        self.lb_doencas.setGeometry(QtCore.QRect(32, 11, 61, 18))
+        self.lb_doencas.setStyleSheet("font: 75 8pt \"MS Shell Dlg 2\";\n"
+"font: 11pt \"MS Shell Dlg 2\";")
+        self.lb_doencas.setObjectName("lb_doencas")
+        self.cb_doencas = QtWidgets.QComboBox(self.fr_topbar)
+        self.cb_doencas.setGeometry(QtCore.QRect(100, 10, 141, 21))
+        self.cb_doencas.setStyleSheet("background-color: rgb(255, 255, 255);")
+        self.cb_doencas.setObjectName("cb_doencas")
+        self.rb_normal = QtWidgets.QRadioButton(self.fr_topbar)
+        self.rb_normal.setGeometry(QtCore.QRect(300, 10, 82, 17))
+        self.rb_normal.setStyleSheet("font: 75 8pt \"MS Shell Dlg 2\";\n"
+"font: 10.5pt \"MS Shell Dlg 2\";\n"
+"")
+        self.rb_normal.setObjectName("rb_normal")
+        self.rb_chuvoso = QtWidgets.QRadioButton(self.fr_topbar)
+        self.rb_chuvoso.setGeometry(QtCore.QRect(300, 30, 82, 17))
+        self.rb_chuvoso.setStyleSheet("font: 10.5pt \"MS Shell Dlg 2\";\n"
+"")
+        self.rb_chuvoso.setObjectName("rb_chuvoso")
+        self.rb_seco = QtWidgets.QRadioButton(self.fr_topbar)
+        self.rb_seco.setGeometry(QtCore.QRect(300, 50, 82, 17))
+        self.rb_seco.setStyleSheet("font: 10.5pt \"MS Shell Dlg 2\";")
+        self.rb_seco.setObjectName("rb_seco")
         self.Pages.addWidget(self.pg_acao)
         self.pg_exportar = QtWidgets.QWidget()
         self.pg_exportar.setObjectName("pg_exportar")
-        self.txt_relatorio = QtWidgets.QTextEdit(self.pg_exportar)
-        self.txt_relatorio.setGeometry(QtCore.QRect(120, 80, 561, 411))
-        self.txt_relatorio.setStyleSheet("background-color: rgb(255, 255, 255);")
-        self.txt_relatorio.setObjectName("txt_relatorio")
-        self.splitter = QtWidgets.QSplitter(self.pg_exportar)
-        self.splitter.setGeometry(QtCore.QRect(130, 20, 341, 31))
-        self.splitter.setOrientation(QtCore.Qt.Horizontal)
-        self.splitter.setObjectName("splitter")
-        self.lb_exportar = QtWidgets.QLabel(self.splitter)
-        self.lb_exportar.setStyleSheet("font: 75 8pt \"MS Shell Dlg 2\";\n"
-"font: 11pt \"MS Shell Dlg 2\";")
-        self.lb_exportar.setObjectName("lb_exportar")
-        self.btn_relatorio = QtWidgets.QPushButton(self.splitter)
-        self.btn_relatorio.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
-        self.btn_relatorio.setStyleSheet("QPushButton{\n"
+        self.frame_2 = QtWidgets.QFrame(self.pg_exportar)
+        self.frame_2.setGeometry(QtCore.QRect(180, 120, 421, 291))
+        self.frame_2.setStyleSheet("border:2.5px solid rgb(0, 80, 121);\n"
+"")
+        self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
+        self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.frame_2.setObjectName("frame_2")
+        self.radioButton_4 = QtWidgets.QRadioButton(self.frame_2)
+        self.radioButton_4.setGeometry(QtCore.QRect(61, 140, 207, 31))
+        self.radioButton_4.setStyleSheet("font: 16pt \"MS Shell Dlg 2\";\n"
+"border:2.5px solid rgb(0, 80, 121, 0,0);")
+        self.radioButton_4.setObjectName("radioButton_4")
+        self.radioButton_5 = QtWidgets.QRadioButton(self.frame_2)
+        self.radioButton_5.setGeometry(QtCore.QRect(61, 97, 197, 31))
+        self.radioButton_5.setStyleSheet("font: 16pt \"MS Shell Dlg 2\";\n"
+"border:2.5px solid rgb(0, 80, 121, 0,0);\n"
+"\n"
+"\n"
+"\n"
+"\n"
+"")
+        self.radioButton_5.setObjectName("radioButton_5")
+        self.radioButton_6 = QtWidgets.QRadioButton(self.frame_2)
+        self.radioButton_6.setGeometry(QtCore.QRect(61, 183, 228, 31))
+        self.radioButton_6.setStyleSheet("font: 16pt \"MS Shell Dlg 2\";\n"
+"border:2.5px solid rgb(0, 80, 121, 0,0);")
+        self.radioButton_6.setObjectName("radioButton_6")
+        self.btn_relatorio_2 = QtWidgets.QPushButton(self.frame_2)
+        self.btn_relatorio_2.setGeometry(QtCore.QRect(23, 250, 376, 25))
+        self.btn_relatorio_2.setMinimumSize(QtCore.QSize(0, 25))
+        self.btn_relatorio_2.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btn_relatorio_2.setStyleSheet("QPushButton{\n"
 "    color: rgb(255, 255, 255);\n"
 "    border-radius: 3px;\n"
+"    border:2px solid rgb(0, 80, 121);\n"
 "    font-size: 16px;\n"
 "    background-color: rgb(0, 80, 121);\n"
 "}\n"
 "\n"
 "QPushButton:hover{background-color: #acacac; color:black; border:2px solid  rgb(0, 80, 121);}")
-        self.btn_relatorio.setObjectName("btn_relatorio")
+        self.btn_relatorio_2.setObjectName("btn_relatorio_2")
+        self.label = QtWidgets.QLabel(self.frame_2)
+        self.label.setGeometry(QtCore.QRect(23, 10, 376, 71))
+        self.label.setStyleSheet("font: 75 16pt \"MS Shell Dlg 2\";\n"
+"border-radius:3px;\n"
+"border:2.5px solid rgb(0, 80, 121);")
+        self.label.setObjectName("label")
         self.Pages.addWidget(self.pg_exportar)
         self.verticalLayout.addWidget(self.Pages)
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
-        self.Pages.setCurrentIndex(0)
+        self.Pages.setCurrentIndex(2)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
     def retranslateUi(self, MainWindow):
@@ -230,7 +278,7 @@ class Ui_MainWindow(object):
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">Agrotóxico:</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
-"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">Aplicação anterior:</span></p>\n"
+"<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">Inicio do Tratamento:</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
 "<p style=\" margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;\"><span style=\" font-size:10pt;\">Próxima aplicação:</span></p>\n"
 "<p style=\"-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px; font-size:10pt;\"><br /></p>\n"
@@ -243,8 +291,15 @@ class Ui_MainWindow(object):
         self.lb_atualizacao2.setText(_translate("MainWindow", "Tempo e umidade"))
         self.btn_iniciarAcao.setText(_translate("MainWindow", "Iniciar"))
         self.lb_agrotoxicoAcao.setText(_translate("MainWindow", "Agrotóxico:"))
-        self.lb_exportar.setText(_translate("MainWindow", "Exportar relatório de aplicação:"))
-        self.btn_relatorio.setText(_translate("MainWindow", "Executar"))
+        self.lb_doencas.setText(_translate("MainWindow", "Doenças:"))
+        self.rb_normal.setText(_translate("MainWindow", "Normal"))
+        self.rb_chuvoso.setText(_translate("MainWindow", "Chuvoso"))
+        self.rb_seco.setText(_translate("MainWindow", "Seco"))
+        self.radioButton_4.setText(_translate("MainWindow", "Exportar agrotóxico"))
+        self.radioButton_5.setText(_translate("MainWindow", "Exportar aplicação"))
+        self.radioButton_6.setText(_translate("MainWindow", "Exportar últimas altas"))
+        self.btn_relatorio_2.setText(_translate("MainWindow", "Exportar"))
+        self.label.setText(_translate("MainWindow", "Selecione um para que seja exportado"))
 
 
 if __name__ == "__main__":

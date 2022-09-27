@@ -6,8 +6,12 @@
 import email.message
 import smtplib
 import sqlite3
+import PySimpleGUI as sg
+
 from datetime import date, timedelta, datetime
-from front import Ui_MainWindow
+
+umidade = 35
+temperatura = 25
 
 
 db = sqlite3.connect('sistemaTCC.db')
@@ -36,11 +40,8 @@ def enviarEmailAlertadeIrrigacao():
     s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
     print('Email enviado')
 
-def enviarEmailInicioDeTratamento():
-    corpo_email = """
-    <p>Iniciou um Tratamento</p>
-    <p>Agrotico: </p>
-    """
+def enviarEmailInicioDeTratamento(doenca,agrotoxico):
+    corpo_email = printAgrotoxicoEmail(doenca,agrotoxico)
 
     msg = email.message.Message()
     msg['Subject'] = "Inicio de Tratamento"
@@ -59,19 +60,8 @@ def enviarEmailInicioDeTratamento():
 
 # In[ ]:
 
-#Inicia o tratamento, grava no banco a data de inicio, as proximas aplicacoes, e a ultima aplcacao
-def iniciarTratamento(agrotoxico,intervaloAplicacao,duracao):
-    data = (date.today())
-    proximaAplicacao = data + timedelta(intervaloAplicacao)
-    dataFinal = data + timedelta(duracao)
-    cursor.execute(f"INSERT INTO Tratamento (agrotoxico,dataInicial,dataProximaAplicacao,dataFinal) VALUES ('{agrotoxico}','{data}','{proximaAplicacao}','{dataFinal}')")
-    db.commit()
-    enviarEmailInicioDeTratamento()
-
-
-
 #Verifica se teve alta no dia anterior, se sim ele insere na mesmo registro e inicia o tratamento se não grava um novo registro de alta
-def verificaUltimaUmidade(umidade):
+def verificaUltimaUmidade():
     dataOntem = date.today() - timedelta(1)
     dataOntem = str(dataOntem)
     ultimoRegistro = retornaUltimaDataAlerta()
@@ -124,19 +114,165 @@ def enviaAlerta(duracao):
         cursor.execute(f"UPDATE Tratamento SET dataProximaAplicacao = '{atualizacaoDataAplicacao}' WHERE id = {idTratamento};")
         db.commit()
 
+#Função para apresentar ultima temperatura maxima apresentada no bloco "Ultima atualização de Tempo e Umidade"
+def ultimaTemperaturaMaxima():
+    cursor.execute("select temperatura from AltaDoDia order by id desc limit 1")
+    result = cursor.fetchall()
+    final = str(result)[2:-3]
+    return (final)
+
+#Função para a apresentar ultima umidade maxima apresentada no bloco "Ultima atualização de Tempo e Umidade"
+def ultimaUmidadeMaxima():
+    cursor.execute("select umidade from AltaDoDia order by id desc limit 1")
+    result = cursor.fetchall()
+    final = str(result)[2:-3]
+    return (final)
+
+#Função para apresentar data no bloco "Ultima atualização de Tempo e Umidade"
+def dataDeMaxima():
+    cursor.execute("select data from AltaDoDia order by id desc limit 1")
+    result = cursor.fetchall()
+    final = str(result)[3:-4]
+    return (final)
+
+#Função para apresentar ultima aplicacao de agrotoxico de um tratamento ativo
+def mostraUltimaAplicacaoNaAcao():
+    cursor.execute("select ativo from Tratamento order by id desc limit 1")
+    result = cursor.fetchall()
+    ativo = str(result)[2:-3]
+    final = ""
+    if(ativo == "1"):
+        cursor.execute("select dataFinal from Tratamento order by id desc limit 1")
+        result = cursor.fetchall()
+        final = str(result)[3:-4]
+    return(final)
+
+#Função para apresentar proxima aplicacao de agrotoxico de um tratamento ativo
+def mostraProximaAplicacaoNaAcao():
+    cursor.execute("select ativo from Tratamento order by id desc limit 1")
+    result = cursor.fetchall()
+    ativo = str(result)[2:-3]
+    final = ""
+    if(ativo == "1"):
+        cursor.execute("select dataProximaAplicacao from Tratamento order by id desc limit 1")
+        result = cursor.fetchall()
+        final = str(result)[3:-4]
+    return(final)
+
+#Função para apresentar inicio do tratamento ativo
+def mostraInicioDaAcao():
+    cursor.execute("select ativo from Tratamento order by id desc limit 1")
+    result = cursor.fetchall()
+    ativo = str(result)[2:-3]
+    final = ""
+    if (ativo == "1"):
+        cursor.execute("select dataInicial from Tratamento order by id desc limit 1")
+        result = cursor.fetchall()
+        final = str(result)[3:-4]
+    return (final)
+
+#Função para apresentar agrotoxico do tratamento ativo
+def mostraAgrotoximoDaAcao():
+    cursor.execute("select ativo from Tratamento order by id desc limit 1")
+    result = cursor.fetchall()
+    ativo = str(result)[2:-3]
+    final = ""
+    if (ativo == "1"):
+        cursor.execute("select agrotoxico from Tratamento order by id desc limit 1")
+        result = cursor.fetchall()
+        final = str(result)[3:-4]
+    return (final)
+
+#Funcao para retornar a temperatura
+def apresentaTemperatura():
+    porcentagem = f"{str(temperatura)}%"
+    return porcentagem
+
+#Funcao para retornar a umidade
+def apresentaUmidade():
+    porcentagem = f"{str(umidade)}%"
+    return porcentagem
+
+#Inicia o tratamento, grava no banco o registro do inicio de um tratamento
+def iniciarTratamento(doenca,agrotoxico,tempo):
+
+    #Retornar o id do agrotoxico escolhido para o tratamento
+    cursor.execute(f"select id from Agrotoxicos where agrotoxico = '{agrotoxico}' and doenca = '{doenca}' order by id desc limit 1")
+    result = cursor.fetchall()
+    id = str(result)[2:-3]
+
+    #validacao do do tempo de intervalo entre as aplicacoes
+    duracao = 0
+    if tempo == 0:
+        duracao = 8
+    elif tempo == 1:
+        duracao = 7
+    elif tempo == 2:
+        duracao = 10
+    else:
+        sg.popup_ok('Selecione o Clima')
+
+    #Retornar a quantidade total de aplicacoes
+    cursor.execute(f"select qtAplicacoes from Agrotoxicos where id = {id}")
+    result = cursor.fetchall()
+    qtAplicacoes = str(result)[3:-4]
+
+    #Data que iniciou o tratamento
+    dataInicio = (date.today())
+
+    #Soma a data os dias de intervalo para proxima aplicacao e armazena na variavel
+    proximaAplicacao = dataInicio + timedelta(duracao)
+
+    #Multiplica a quantidade de aplicacaoes com o intervalo entre eles, depois soma com a data que iniciou para mostrar a data final
+    qtDiasTotal = int(duracao)* int(qtAplicacoes)
+    dataFinal = dataInicio + timedelta(qtDiasTotal)
+
+    cursor.execute(f"INSERT INTO Tratamento (agrotoxico,dataInicial,dataProximaAplicacao,dataFinal,ativo,intervaloDeAplicacoes) VALUES ({id},'{dataInicio}','{proximaAplicacao}','{dataFinal}',1,{duracao})")
+    db.commit()
+    print("Inserido!")
+
+    enviarEmailInicioDeTratamento(doenca,agrotoxico)
 
 
+#Monta o corpo do email enviado no inicio do tratamento
+def printAgrotoxicoEmail(doenca,agrotoxico):
+    cursor.execute(f"select composicao from Agrotoxicos where agrotoxico = '{agrotoxico}' and doenca = '{doenca}'")
+    result = cursor.fetchall()
+    composicao = str(result)[3:-4]
 
+    cursor.execute(f"select manuseio from Agrotoxicos where agrotoxico = '{agrotoxico}' and doenca = '{doenca}'")
+    result = cursor.fetchall()
+    manuseio = str(result)[3:-4]
 
+    cursor.execute(f"select qtAplicacoes from Agrotoxicos where agrotoxico = '{agrotoxico}' and doenca = '{doenca}'")
+    result = cursor.fetchall()
+    qtAplicacoes = str(result)[3:-4]
 
+    cursor.execute(f"select dosagem from Agrotoxicos where agrotoxico = '{agrotoxico}' and doenca = '{doenca}'")
+    result = cursor.fetchall()
+    dosagem = str(result)[3:-4]
 
+    texto = f'''
+    <h1>Agrotóxico: {agrotoxico}</h1>
+    <p>Usado no combate da: {doenca}</p>
+    
+    <p>Composição: {composicao}</p>
+    <p>Manuseio: {manuseio}</p>
+    <p>Quantidade de aplicações: {qtAplicacoes}</p>
+    <p>Dosagem: {dosagem}</p>
+    '''
 
+    return texto
 
+#Retirar as tags do texto para email, para mostrar na tela
+def printAgrotoxico(doenca,agrotoxico):
+    text = printAgrotoxicoEmail(doenca,agrotoxico).replace("<p>","")
+    text = text.replace("</p>","")
+    text = text.replace("<h1>","")
+    text = text.replace("</h1>","")
+    print(text)
 
-
-
-
-
-
+#iniciarTratamento("testando","teste",2)
+#printAgrotoxico("testando","teste")
 
 
