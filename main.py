@@ -6,9 +6,13 @@
 import email.message
 import smtplib
 import sqlite3
+import pandas as pd
+
 import PySimpleGUI as sg
 
 from datetime import date, timedelta, datetime
+
+from Tools.scripts.dutree import display
 
 umidade = 35
 temperatura = 25
@@ -272,6 +276,41 @@ def printAgrotoxico(doenca,agrotoxico):
     text = text.replace("</h1>","")
     print(text)
 
+def exportarTratamentos():
+    cursor.execute("SELECT agrotoxico, dataInicial, dataFinal,intervaloDeAplicacoes FROM Tratamento")
+    result = cursor.fetchall()
+    dados = pd.DataFrame(data=result)
+    dados.rename(columns={0:'Agrotoxico',1:'Inicio do Tratamento',2:'Termino do Tratamento',3:'Intervalo entre as Aplicacoes'},inplace=True)
+    dados.to_excel("C:/Users/lucas/Desktop/Tratamentos.xlsx", index=False)
+    print("Arquivo exportado!")
+
+def exportarAgrotoxicos():
+    cursor.execute("SELECT agrotoxico, doenca, composicao,manuseio,qtAplicacoes,dosagem FROM Agrotoxicos")
+    result = cursor.fetchall()
+    dados = pd.DataFrame(data=result)
+    dados.rename(columns={0: 'Agrotoxico', 1: 'Doenca Preventiva', 2: 'Composicao',3: 'Manuseio',4:'Quantidade de Aplicacoes',5:'Dosagem'}, inplace=True)
+    dados.to_excel("C:/Users/lucas/Desktop/Agrotoxicos.xlsx", index=False)
+    print("Arquivo exportado!")
+
+def exportarAltas():
+    cursor.execute("SELECT temperatura, umidade, data FROM AltaDoDia")
+    result = cursor.fetchall()
+    dados = pd.DataFrame(data=result)
+    dados.rename(columns={0: 'Temperatura Maxima', 1: 'Umidade Maxima', 2: 'Data da Alta'}, inplace=True)
+    dados.to_excel("C:/Users/lucas/Desktop/Registros de Alta.xlsx", index=False)
+    print("Arquivo exportado!")
+
+def exportarDados(escolha):
+    if (escolha == 0):
+        exportarTratamentos()
+    elif (escolha == 1):
+        exportarAgrotoxicos()
+    elif (escolha == 2):
+        exportarAltas()
+    else:
+        sg.popup_ok('Selecione uma opção Valida')
+
+#exportarDados(2)
 #iniciarTratamento("testando","teste",2)
 #printAgrotoxico("testando","teste")
 
