@@ -7,15 +7,12 @@ import email.message
 import smtplib
 import sqlite3
 import pandas as pd
-
 import PySimpleGUI as sg
-
 from datetime import date, timedelta, datetime
 
-from Tools.scripts.dutree import display
 
-umidade = 35
-temperatura = 25
+umidade = 70
+temperatura = 15
 
 
 db = sqlite3.connect('sistemaTCC.db')
@@ -44,8 +41,8 @@ def enviarEmailAlertadeIrrigacao():
     s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
     print('Email enviado')
 
-def enviarEmailInicioDeTratamento(doenca,agrotoxico):
-    corpo_email = printAgrotoxicoEmail(doenca,agrotoxico)
+def enviarEmailInicioDeTratamento(agrotoxico):
+    corpo_email = printAgrotoxicoEmail(agrotoxico)
 
     msg = email.message.Message()
     msg['Subject'] = "Inicio de Tratamento"
@@ -70,15 +67,20 @@ def verificaUltimaUmidade():
     dataOntem = str(dataOntem)
     ultimoRegistro = retornaUltimaDataAlerta()
     ultimoID = retornaUltimaRegistroAlerta()
-    if(umidade >= 80):
-        if(dataOntem == ultimoRegistro):
-            cursor.execute(f"UPDATE Alerta SET segundoAlerta = '{date.today()}' WHERE id = {ultimoID};")
-            db.commit()
-            print("Atualizou")
-        else:
-            cursor.execute(f"INSERT INTO Alerta (primeiroAlerta) VALUES ('{date.today()}')")
-            db.commit()
-            print("Inseriu")
+    if(dataOntem == ultimoRegistro):
+        cursor.execute(f"UPDATE Alerta SET segundoAlerta = '{date.today()}' WHERE id = {ultimoID};")
+        db.commit()
+        print("Atualizou")
+        escolha = input('''
+        Alerta de Clima!
+        Deseja Iniciar um Tratamento? (Sim ou Não)
+        ''')
+        if(escolha == 'sim') or (escolha == 's') or (escolha == 'S') or (escolha == 'Sim') or (escolha == 'SIM'):
+            iniciarTratamento('teste')
+    else:
+        cursor.execute(f"INSERT INTO Alerta (primeiroAlerta) VALUES ('{date.today()}')")
+        db.commit()
+        print("Inseriu")
 
 #Método para retornar a ultima data registrada na tabela Alerta
 def retornaUltimaDataAlerta():
@@ -86,6 +88,14 @@ def retornaUltimaDataAlerta():
     result = cursor.fetchall()
     final = str(result)[3:-4]
     return(final)
+
+#Método para retornar data Final do ultimo tratamento registrada
+def retornaDataFinalTratamento():
+    id = retornaUltimoRegistroTratamento()
+    cursor.execute(f"select dataFinal from Tratamento where id = {id}")
+    result = cursor.fetchall()
+    final = str(result)[3:-4]
+    return (final)
 
 #Método para retornar o ultimo ID registrado na Tabela Alerta
 def retornaUltimaRegistroAlerta():
@@ -96,6 +106,13 @@ def retornaUltimaRegistroAlerta():
 
 def retornaUltimoRegistroTratamento():
     cursor.execute("select MAX(id) from Tratamento")
+    result = cursor.fetchall()
+    final = str(result)[2:-3]
+    return(final)
+
+#Retorna Intervalo de Aplicacoes do ultimo registro de tratamento
+def retornaUltimoIntervaloDeAplicacoes():
+    cursor.execute(f"select intervaloDeAplicacoes from Tratamento where id = {retornaUltimoRegistroTratamento()}")
     result = cursor.fetchall()
     final = str(result)[2:-3]
     return(final)
@@ -198,10 +215,16 @@ def apresentaUmidade():
     return porcentagem
 
 #Inicia o tratamento, grava no banco o registro do inicio de um tratamento
-def iniciarTratamento(doenca,agrotoxico,tempo):
+def iniciarTratamento(agrotoxico,tempo = 0):
+    '''
+    Classificação de Agrotóxicos
+    Pinta Preta = 1
+    Requeima = 2
+    Ambos = 3
+    '''
 
     #Retornar o id do agrotoxico escolhido para o tratamento
-    cursor.execute(f"select id from Agrotoxicos where agrotoxico = '{agrotoxico}' and doenca = '{doenca}' order by id desc limit 1")
+    cursor.execute(f"select id from Agrotoxicos where agrotoxico = '{agrotoxico}' order by id desc limit 1")
     result = cursor.fetchall()
     id = str(result)[2:-3]
 
@@ -235,26 +258,30 @@ def iniciarTratamento(doenca,agrotoxico,tempo):
     db.commit()
     print("Inserido!")
 
-    enviarEmailInicioDeTratamento(doenca,agrotoxico)
+    enviarEmailInicioDeTratamento(agrotoxico)
 
 
 #Monta o corpo do email enviado no inicio do tratamento
-def printAgrotoxicoEmail(doenca,agrotoxico):
-    cursor.execute(f"select composicao from Agrotoxicos where agrotoxico = '{agrotoxico}' and doenca = '{doenca}'")
+def printAgrotoxicoEmail(agrotoxico):
+    cursor.execute(f"select composicao from Agrotoxicos where agrotoxico = '{agrotoxico}'")
     result = cursor.fetchall()
     composicao = str(result)[3:-4]
 
-    cursor.execute(f"select manuseio from Agrotoxicos where agrotoxico = '{agrotoxico}' and doenca = '{doenca}'")
+    cursor.execute(f"select manuseio from Agrotoxicos where agrotoxico = '{agrotoxico}'")
     result = cursor.fetchall()
     manuseio = str(result)[3:-4]
 
-    cursor.execute(f"select qtAplicacoes from Agrotoxicos where agrotoxico = '{agrotoxico}' and doenca = '{doenca}'")
+    cursor.execute(f"select qtAplicacoes from Agrotoxicos where agrotoxico = '{agrotoxico}'")
     result = cursor.fetchall()
     qtAplicacoes = str(result)[3:-4]
 
-    cursor.execute(f"select dosagem from Agrotoxicos where agrotoxico = '{agrotoxico}' and doenca = '{doenca}'")
+    cursor.execute(f"select dosagem from Agrotoxicos where agrotoxico = '{agrotoxico}'")
     result = cursor.fetchall()
     dosagem = str(result)[3:-4]
+
+    cursor.execute(f"select doenca from Agrotoxicos where agrotoxico = '{agrotoxico}'")
+    result = cursor.fetchall()
+    doenca = str(result)[3:-4]
 
     texto = f'''
     <h1>Agrotóxico: {agrotoxico}</h1>
@@ -264,6 +291,8 @@ def printAgrotoxicoEmail(doenca,agrotoxico):
     <p>Manuseio: {manuseio}</p>
     <p>Quantidade de aplicações: {qtAplicacoes}</p>
     <p>Dosagem: {dosagem}</p>
+    
+    <p>Inicio do Tratamento: {date.today()}</p>
     '''
 
     return texto
@@ -283,6 +312,7 @@ def exportarTratamentos():
     dados.rename(columns={0:'Agrotoxico',1:'Inicio do Tratamento',2:'Termino do Tratamento',3:'Intervalo entre as Aplicacoes'},inplace=True)
     dados.to_excel("C:/Users/lucas/Desktop/Tratamentos.xlsx", index=False)
     print("Arquivo exportado!")
+    sg.popup_ok('Arquivo exportado!')
 
 def exportarAgrotoxicos():
     cursor.execute("SELECT agrotoxico, doenca, composicao,manuseio,qtAplicacoes,dosagem FROM Agrotoxicos")
@@ -291,14 +321,19 @@ def exportarAgrotoxicos():
     dados.rename(columns={0: 'Agrotoxico', 1: 'Doenca Preventiva', 2: 'Composicao',3: 'Manuseio',4:'Quantidade de Aplicacoes',5:'Dosagem'}, inplace=True)
     dados.to_excel("C:/Users/lucas/Desktop/Agrotoxicos.xlsx", index=False)
     print("Arquivo exportado!")
+    sg.popup_ok('Arquivo exportado!')
 
 def exportarAltas():
     cursor.execute("SELECT temperatura, umidade, data FROM AltaDoDia")
     result = cursor.fetchall()
     dados = pd.DataFrame(data=result)
     dados.rename(columns={0: 'Temperatura Maxima', 1: 'Umidade Maxima', 2: 'Data da Alta'}, inplace=True)
-    dados.to_excel("C:/Users/lucas/Desktop/Registros de Alta.xlsx", index=False)
+    pathDir = "C:/Users/lucas/Desktop/Registros de Alta.xlsx"
+    dados.to_excel(pathDir, index=False)
     print("Arquivo exportado!")
+    sg.popup_ok('Arquivo exportado!')
+
+
 
 def exportarDados(escolha):
     if (escolha == 0):
@@ -310,8 +345,56 @@ def exportarDados(escolha):
     else:
         sg.popup_ok('Selecione uma opção Valida')
 
-#exportarDados(2)
-#iniciarTratamento("testando","teste",2)
-#printAgrotoxico("testando","teste")
+def verificaTratamentoAtivo():
+    id = retornaUltimoRegistroTratamento()
+    cursor.execute(f"select ativo from Tratamento where id = {id} ")
+    result = cursor.fetchall()
+    final = str(result)[2:-3]
+    return (final)
+
+def alteracaoDoenca(doenca):
+    if doenca == 1:
+        final = "Pinta Preta"
+    elif doenca == 2:
+        final = "Requeima"
+    elif doenca == 3:
+        final = "Ambas"
+    return final
+def atualizaTratamento():
+    ativo = verificaTratamentoAtivo()
+    if (ativo == "0"):
+        if (umidade >= 70) and (temperatura >= 15):
+            verificaUltimaUmidade()
+        else:
+            print("Temp e Umidade normal")
+    else:
+        print("Tratamento em Andamento")
+
+def verificaAplicacao():
+    proximaAplicacao = retornaDataProximaAplicacao()
+    dataFinal = retornaDataFinalTratamento()
+    ativo = verificaTratamentoAtivo()
+    hoje = date.today()
+    if (ativo == "1"):
+        if (str(hoje) == dataFinal):
+            print("Aplicar Agrotóxico")
+            cursor.execute(f"UPDATE Tratamento SET ativo = {0} WHERE id = {retornaUltimoRegistroTratamento()};")
+            db.commit()
+            print("Tratamento Finalizado")
+
+        else:
+            if (proximaAplicacao == str(hoje)):
+                print("Aplicar Agrotoxico")
+                atualizaAplicacao = hoje + timedelta(int(retornaUltimoIntervaloDeAplicacoes()))
+                cursor.execute(f"UPDATE Tratamento SET dataProximaAplicacao = '{atualizaAplicacao}' WHERE id = {retornaUltimoRegistroTratamento()};")
+                db.commit()
+                print("Data Atualizada")
+            else:
+                print("...")
+    else:
+        print("Nenhum Tratamento em Andamento")
 
 
+#verificaAplicacao()
+atualizaTratamento()
+#Implementar um main para rodar direto
