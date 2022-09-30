@@ -9,6 +9,9 @@ import sqlite3
 import pandas as pd
 import PySimpleGUI as sg
 from datetime import date, timedelta, datetime
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget)
+from front import Ui_MainWindow
+import sys
 
 
 umidade = 70
@@ -279,7 +282,10 @@ def printAgrotoxicoEmail(agrotoxico):
     result = cursor.fetchall()
     dosagem = str(result)[3:-4]
 
-    cursor.execute(f"select doenca from Agrotoxicos where agrotoxico = '{agrotoxico}'")
+    cursor.execute(f"select doenca from Agrotoxicos where agrotoxico = 'teste'")
+    result = cursor.fetchall()
+    id = str(result)[2:-3]
+    cursor.execute(f"select doenca from Doencas where id = {id}")
     result = cursor.fetchall()
     doenca = str(result)[3:-4]
 
@@ -298,15 +304,15 @@ def printAgrotoxicoEmail(agrotoxico):
     return texto
 
 #Retirar as tags do texto para email, para mostrar na tela
-def printAgrotoxico(doenca,agrotoxico):
-    text = printAgrotoxicoEmail(doenca,agrotoxico).replace("<p>","")
+def printAgrotoxico(agrotoxico):
+    text = printAgrotoxicoEmail(agrotoxico).replace("<p>","")
     text = text.replace("</p>","")
     text = text.replace("<h1>","")
     text = text.replace("</h1>","")
-    print(text)
+    return(text)
 
 def exportarTratamentos():
-    cursor.execute("SELECT agrotoxico, dataInicial, dataFinal,intervaloDeAplicacoes FROM Tratamento")
+    cursor.execute("SELECT a.agrotoxico, t.dataInicial, t.dataFinal,t.intervaloDeAplicacoes FROM Tratamento as t INNER JOIN Agrotoxicos as a on t.agrotoxico = a.id")
     result = cursor.fetchall()
     dados = pd.DataFrame(data=result)
     dados.rename(columns={0:'Agrotoxico',1:'Inicio do Tratamento',2:'Termino do Tratamento',3:'Intervalo entre as Aplicacoes'},inplace=True)
@@ -315,7 +321,7 @@ def exportarTratamentos():
     sg.popup_ok('Arquivo exportado!')
 
 def exportarAgrotoxicos():
-    cursor.execute("SELECT agrotoxico, doenca, composicao,manuseio,qtAplicacoes,dosagem FROM Agrotoxicos")
+    cursor.execute("SELECT a.agrotoxico, d.doenca, a.composicao,a.manuseio,a.qtAplicacoes,a.dosagem FROM Agrotoxicos as a inner join Doencas as d on a.doenca = d.id")
     result = cursor.fetchall()
     dados = pd.DataFrame(data=result)
     dados.rename(columns={0: 'Agrotoxico', 1: 'Doenca Preventiva', 2: 'Composicao',3: 'Manuseio',4:'Quantidade de Aplicacoes',5:'Dosagem'}, inplace=True)
@@ -360,6 +366,7 @@ def alteracaoDoenca(doenca):
     elif doenca == 3:
         final = "Ambas"
     return final
+
 def atualizaTratamento():
     ativo = verificaTratamentoAtivo()
     if (ativo == "0"):
@@ -394,7 +401,44 @@ def verificaAplicacao():
     else:
         print("Nenhum Tratamento em Andamento")
 
+def retornaIdDoenca(doenca):
+    cursor.execute(f"select id from Doencas where doenca = '{doenca}' ")
+    result = cursor.fetchall()
+    final = str(result)[2:-3]
+    return (final)
+
+def retornaArrayDeAgrotoxicos(doenca='Ambos'):
+    cursor.execute(f"select agrotoxico from Agrotoxicos where doenca = {retornaIdDoenca(doenca)} ")
+    result = cursor.fetchall()
+    return (result)
+
+def retornaArrayDeDoencas():
+    cursor.execute(f"select doenca from Doencas")
+    result = cursor.fetchall()
+    return (result)
 
 #verificaAplicacao()
-atualizaTratamento()
+#atualizaTratamento()
 #Implementar um main para rodar direto
+
+#INICIO INTERFACE
+
+
+class MainWindow(QMainWindow, Ui_MainWindow):
+    def __init__(self):
+        super(MainWindow, self).__init__()
+        self.setupUi(self)
+        self.setWindowTitle("Sistema de gerenciamento")
+
+        #PAGINAS DO SISTEMA
+        self.btn_dashbord.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pg_dashbord))
+        self.btn_acao.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pg_acao))
+        self.btn_exportar.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pgexportar))
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    app.exec()
+
+    #FIM INTERFACE
