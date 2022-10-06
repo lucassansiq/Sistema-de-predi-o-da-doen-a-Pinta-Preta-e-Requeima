@@ -76,12 +76,13 @@ def verificaUltimaUmidade():
         cursor.execute(f"UPDATE Alerta SET segundoAlerta = '{date.today()}' WHERE id = {ultimoID};")
         db.commit()
         print("Atualizou")
-        escolha = input('''
-        Alerta de Clima!
-        Deseja Iniciar um Tratamento? (Sim ou Não)
-        ''')
-        if (escolha == 'sim') or (escolha == 's') or (escolha == 'S') or (escolha == 'Sim') or (escolha == 'SIM'):
-            iniciarTratamento('teste')
+        sg.popup_ok('Inicie agora um Tratamento')
+        #escolha = input('''
+        #Alerta de Clima!
+        #Deseja Iniciar um Tratamento? (Sim ou Não)
+        #''')
+        #if (escolha == 'sim') or (escolha == 's') or (escolha == 'S') or (escolha == 'Sim') or (escolha == 'SIM'):
+        #    iniciarTratamento('teste')
     else:
         cursor.execute(f"INSERT INTO Alerta (primeiroAlerta) VALUES ('{date.today()}')")
         db.commit()
@@ -313,12 +314,12 @@ def printAgrotoxicoEmail(agrotoxico):
     texto = f'''
     <h1>Agrotóxico: {agrotoxico}</h1>
     <p>Usado no combate da: {doenca}</p>
-    
+
     <p>Composição: {composicao}</p>
     <p>Manuseio: {manuseio}</p>
     <p>Quantidade de aplicações: {qtAplicacoes}</p>
     <p>Dosagem: {dosagem}</p>
-    
+
     <p>Inicio do Tratamento: {date.today()}</p>
     '''
 
@@ -404,11 +405,6 @@ def atualizaTratamento():
     if (ativo == "0"):
         if (umidade >= 70) and (temperatura >= 15):
             verificaUltimaUmidade()
-        else:
-            print("Temp e Umidade normal")
-    else:
-        print("Tratamento em Andamento")
-
 
 def verificaAplicacao():
     if (verificaTratamentoAtivo() == "1"):
@@ -426,7 +422,6 @@ def verificaAplicacao():
                     f"UPDATE Tratamento SET dataProximaAplicacao = '{atualizaAplicacao}' WHERE id = {retornaUltimoRegistroTratamento()};")
                 db.commit()
                 print("Data Atualizada")
-
 
 
 def retornaIdDoenca(doenca):
@@ -447,25 +442,22 @@ def retornaArrayDeDoencas():
     result = cursor.fetchall()
     return (result)
 
-def principalSistema():
-    while (1):
-        verificaAplicacao()
 
 def atualizaTemperaturaUmidade():
-    while True: #Loop para a conexão com o Arduino
-        try:  #Tenta se conectar, se conseguir, o loop se encerra
+    while True:  # Loop para a conexão com o Arduino
+        try:  # Tenta se conectar, se conseguir, o loop se encerra
             arduino = serial.Serial('COM6', 9600)
             print('Arduino conectado')
             break
         except:
             pass
-    while True: #Loop principal
-        msg = str(arduino.readline()) #Lê os dados em formato de string
-        umidade = int(msg[40:-11]) #Fatia a string, converte para int e atualiza a umidade global
-        print(f"Umidade {umidade}") #Imprime a mensagem
-        temperatura = int(msg[16:-35])  #Fatia a string, converte para int e atualiza a temperatura global
+    while True:  # Loop principal
+        msg = str(arduino.readline())  # Lê os dados em formato de string
+        umidade = int(msg[40:-11])  # Fatia a string, converte para int e atualiza a umidade global
+        print(f"Umidade {umidade}")  # Imprime a mensagem
+        temperatura = int(msg[16:-35])  # Fatia a string, converte para int e atualiza a temperatura global
         print(f"Temperatura {temperatura}")  # Imprime a mensagem
-        arduino.flush() #Limpa a comunicação
+        arduino.flush()  # Limpa a comunicação
 
 
 # INICIO INTERFACE
@@ -479,8 +471,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.btn_dashbord.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pg_dashbord))
         self.btn_acao.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pg_acao))
         self.btn_exportar.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pgexportar))
-
-
 
 
 '''if __name__ == "__main__":
@@ -512,24 +502,26 @@ class myThread(threading.Thread):
                     pass
             while True:  # Loop principal
                 msg = str(arduino.readline())  # Lê os dados em formato de string
+                global umidade
                 umidade = int(msg[40:-11])  # Fatia a string, converte para int e atualiza a umidade global
                 print(f"Umidade {umidade}")  # Imprime a mensagem
+                global temperatura
                 temperatura = int(msg[16:-35])  # Fatia a string, converte para int e atualiza a temperatura global
                 print(f"Temperatura {temperatura}")  # Imprime a mensagem
                 arduino.flush()  # Limpa a comunicação
         else:
-            if(self.name == "2"):
-                    app = QApplication(sys.argv)
-                    window = MainWindow()
-                    window.show()
-                    app.exec()
+            if (self.name == "2"):
+                app = QApplication(sys.argv)
+                window = MainWindow()
+                window.show()
+                app.exec()
             else:
-                if(self.name == "3"):
+                if (self.name == "3"):
                     tempNum = 0
-                    while(True):
+                    while (True):
                         verificaAplicacao()
+                        atualizaTratamento()
             print("Exiting " + self.name)
-
 
 
 # Create new threads
