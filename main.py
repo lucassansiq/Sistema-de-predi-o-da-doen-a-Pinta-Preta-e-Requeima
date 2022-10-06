@@ -18,7 +18,7 @@ import serial
 umidade = 0
 temperatura = 0
 
-db = sqlite3.connect('sistemaTCC.db')
+db = sqlite3.connect('sistemaTCC.db', check_same_thread=False)
 cursor = db.cursor()
 
 
@@ -426,10 +426,7 @@ def verificaAplicacao():
                     f"UPDATE Tratamento SET dataProximaAplicacao = '{atualizaAplicacao}' WHERE id = {retornaUltimoRegistroTratamento()};")
                 db.commit()
                 print("Data Atualizada")
-            else:
-                print("...")
-    else:
-        print("Nenhum Tratamento em Andamento")
+
 
 
 def retornaIdDoenca(doenca):
@@ -530,7 +527,7 @@ class myThread(threading.Thread):
                 if(self.name == "3"):
                     tempNum = 0
                     while(True):
-                        tempNum+=1
+                        verificaAplicacao()
             print("Exiting " + self.name)
 
 
