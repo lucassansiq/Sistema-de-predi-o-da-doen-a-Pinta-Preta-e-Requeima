@@ -15,8 +15,8 @@ import sys
 import threading
 import serial
 
-umidade = 0
-temperatura = 0
+umidade = 80
+temperatura = 50
 
 db = sqlite3.connect('sistemaTCC.db', check_same_thread=False)
 cursor = db.cursor()
@@ -63,11 +63,10 @@ def enviarEmailInicioDeTratamento(agrotoxico):
     s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
     print('Email enviado')
 
-
 # In[ ]:
 
 # Verifica se teve alta no dia anterior, se sim ele insere na mesmo registro e inicia o tratamento se não grava um novo registro de alta
-def verificaUltimaUmidade():
+def  verificaUltimaUmidade():
     dataOntem = date.today() - timedelta(1)
     dataOntem = str(dataOntem)
     ultimoRegistro = retornaUltimaDataAlerta()
@@ -77,12 +76,7 @@ def verificaUltimaUmidade():
         db.commit()
         print("Atualizou")
         sg.popup_ok('Inicie agora um Tratamento')
-        #escolha = input('''
-        #Alerta de Clima!
-        #Deseja Iniciar um Tratamento? (Sim ou Não)
-        #''')
-        #if (escolha == 'sim') or (escolha == 's') or (escolha == 'S') or (escolha == 'Sim') or (escolha == 'SIM'):
-        #    iniciarTratamento('teste')
+
     else:
         cursor.execute(f"INSERT INTO Alerta (primeiroAlerta) VALUES ('{date.today()}')")
         db.commit()
@@ -95,12 +89,21 @@ def retornaUltimaDataAlerta():
     result = cursor.fetchall()
     final = str(result)[3:-4]
     return (final)
+def retornaUltimaSegundaDataAlerta():
+    cursor.execute("select segundoAlerta from Alerta order by id desc limit 1")
+    result = cursor.fetchall()
+    final = str(result)[3:-4]
+    return (final)
+def retornaUltimoIdAlerta():
+    cursor.execute("select id from Alerta order by id desc limit 1")
+    result = cursor.fetchall()
+    final = str(result)[2:-3]
+    return (final)
 
 
 # Método para retornar data Final do ultimo tratamento registrada
 def retornaDataFinalTratamento():
-    id = retornaUltimoRegistroTratamento()
-    cursor.execute(f"select dataFinal from Tratamento where id = {id}")
+    cursor.execute(f"select dataFinal from Tratamento where id = {retornaUltimoRegistroTratamento()}")
     result = cursor.fetchall()
     final = str(result)[3:-4]
     return (final)
@@ -125,7 +128,7 @@ def retornaUltimoRegistroTratamento():
 def retornaUltimoIntervaloDeAplicacoes():
     cursor.execute(f"select intervaloDeAplicacoes from Tratamento where id = {retornaUltimoRegistroTratamento()}")
     result = cursor.fetchall()
-    final = str(result)[2:-3]
+    final = str(result)[1:-1]
     return (final)
 
 
@@ -404,7 +407,9 @@ def atualizaTratamento():
     ativo = verificaTratamentoAtivo()
     if (ativo == "0"):
         if (umidade >= 70) and (temperatura >= 15):
-            verificaUltimaUmidade()
+            if (retornaUltimaDataAlerta() != str(date.today())):
+                if(retornaUltimaSegundaDataAlerta() != str(date.today())):
+                    verificaUltimaUmidade()
 
 def verificaAplicacao():
     if (verificaTratamentoAtivo() == "1"):
@@ -412,15 +417,16 @@ def verificaAplicacao():
             print("Aplicar Agrotóxico")
             cursor.execute(f"UPDATE Tratamento SET ativo = {0} WHERE id = {retornaUltimoRegistroTratamento()};")
             db.commit()
+            enviarEmailAlertadeIrrigacao()
             print("Tratamento Finalizado")
 
         else:
             if (retornaDataProximaAplicacao() == str(date.today())):
                 print("Aplicar Agrotoxico")
                 atualizaAplicacao = date.today() + timedelta(int(retornaUltimoIntervaloDeAplicacoes()))
-                cursor.execute(
-                    f"UPDATE Tratamento SET dataProximaAplicacao = '{atualizaAplicacao}' WHERE id = {retornaUltimoRegistroTratamento()};")
+                cursor.execute(f"UPDATE Tratamento SET dataProximaAplicacao = '{atualizaAplicacao}' WHERE id = {retornaUltimoRegistroTratamento()};")
                 db.commit()
+                enviarEmailAlertadeIrrigacao()
                 print("Data Atualizada")
 
 
@@ -471,14 +477,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.btn_dashbord.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pg_dashbord))
         self.btn_acao.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pg_acao))
         self.btn_exportar.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pgexportar))
-
-
-'''if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    app.exec()'''
-
 
 # FIM INTERFACE
 
@@ -533,4 +531,8 @@ thread3 = myThread(3, "3", 3)
 thread1.start()
 thread2.start()
 thread3.start()
+
+
+
+
 
