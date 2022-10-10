@@ -15,14 +15,16 @@ import sys
 import threading
 import serial
 
-umidade = 80
-temperatura = 50
+#Variaveis globais da umidade e temperatura
+umidade = 0
+temperatura = 0
 
+#Conexao com o Banco de Dados e declaracao da variavel cursos para manipulação do BD
 db = sqlite3.connect('sistemaTCC.db', check_same_thread=False)
 cursor = db.cursor()
 
 
-# Enviar alertas para o email
+# Função para enviar email de alerta de irrigação
 def enviarEmailAlertadeIrrigacao():
     corpo_email = """
     <p>Faça uma irrigação do Agrotoxico Hoje</p>
@@ -44,7 +46,7 @@ def enviarEmailAlertadeIrrigacao():
     s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
     print('Email enviado')
 
-
+#Funcao para enviar o email ao iniciar um tratamento
 def enviarEmailInicioDeTratamento(agrotoxico):
     corpo_email = printAgrotoxicoEmail(agrotoxico)
 
@@ -65,7 +67,7 @@ def enviarEmailInicioDeTratamento(agrotoxico):
 
 # In[ ]:
 
-# Verifica se teve alta no dia anterior, se sim ele insere na mesmo registro e inicia o tratamento se não grava um novo registro de alta
+# Verifica se teve alta no dia anterior, se sim ele insere na mesmo registro e indica o tratamento se não grava um novo registro de alta
 def  verificaUltimaUmidade():
     dataOntem = date.today() - timedelta(1)
     dataOntem = str(dataOntem)
@@ -83,25 +85,21 @@ def  verificaUltimaUmidade():
         print("Inseriu")
 
 
-# Método para retornar a ultima data registrada na tabela Alerta
+# Funcao para retornar a ultima data registrada na tabela Alerta
 def retornaUltimaDataAlerta():
     cursor.execute("select primeiroAlerta from Alerta order by id desc limit 1")
     result = cursor.fetchall()
     final = str(result)[3:-4]
     return (final)
+
+#Funcao para retornar a segunda data de alerta do ultimo registro da tabela Alerta
 def retornaUltimaSegundaDataAlerta():
     cursor.execute("select segundoAlerta from Alerta order by id desc limit 1")
     result = cursor.fetchall()
     final = str(result)[3:-4]
     return (final)
-def retornaUltimoIdAlerta():
-    cursor.execute("select id from Alerta order by id desc limit 1")
-    result = cursor.fetchall()
-    final = str(result)[2:-3]
-    return (final)
 
-
-# Método para retornar data Final do ultimo tratamento registrada
+# Funcao para retornar data Final do ultimo tratamento registrada na tabela Tratamento
 def retornaDataFinalTratamento():
     cursor.execute(f"select dataFinal from Tratamento where id = {retornaUltimoRegistroTratamento()}")
     result = cursor.fetchall()
@@ -109,14 +107,14 @@ def retornaDataFinalTratamento():
     return (final)
 
 
-# Método para retornar o ultimo ID registrado na Tabela Alerta
+# Funcao para retornar o ultimo ID registrado na Tabela Alerta
 def retornaUltimaRegistroAlerta():
     cursor.execute("select MAX(id) from Alerta")
     result = cursor.fetchall()
     final = str(result)[2:-3]
     return (final)
 
-
+#Funcao para retornar ID do ultimo registro da Tabela Tratamento
 def retornaUltimoRegistroTratamento():
     cursor.execute("select MAX(id) from Tratamento")
     result = cursor.fetchall()
@@ -131,26 +129,13 @@ def retornaUltimoIntervaloDeAplicacoes():
     final = str(result)[1:-1]
     return (final)
 
-
+#Funcao para retornar a data da proxima aplicacao de um tratamento ativo
 def retornaDataProximaAplicacao():
     id = retornaUltimoRegistroTratamento()
     cursor.execute(f"select dataProximaAplicacao from Tratamento where id = {id}")
     result = cursor.fetchall()
     final = str(result)[3:-4]
     return (final)
-
-
-def enviaAlerta(duracao):
-    data = str(date.today())
-    dataProximaAplicacao = retornaDataProximaAplicacao()
-    idTratamento = retornaUltimoRegistroTratamento()
-    if (data == dataProximaAplicacao):
-        enviarEmailAlertadeIrrigacao()
-        atualizacaoDataAplicacao = datetime.strptime(dataProximaAplicacao, '%Y-%m-%d').date()
-        atualizacaoDataAplicacao = atualizacaoDataAplicacao + timedelta(duracao)
-        cursor.execute(
-            f"UPDATE Tratamento SET dataProximaAplicacao = '{atualizacaoDataAplicacao}' WHERE id = {idTratamento};")
-        db.commit()
 
 
 # Função para apresentar ultima temperatura maxima apresentada no bloco "Ultima atualização de Tempo e Umidade"
@@ -337,7 +322,7 @@ def printAgrotoxico(agrotoxico):
     text = text.replace("</h1>", "")
     return (text)
 
-
+#Funcao para exportar a tabela tratamentos para excel
 def exportarTratamentos():
     cursor.execute(
         "SELECT a.agrotoxico, t.dataInicial, t.dataFinal,t.intervaloDeAplicacoes FROM Tratamento as t INNER JOIN Agrotoxicos as a on t.agrotoxico = a.id")
@@ -349,7 +334,7 @@ def exportarTratamentos():
     print("Arquivo exportado!")
     sg.popup_ok('Arquivo exportado!')
 
-
+#Funcao para exportar agrotoxicos para excel
 def exportarAgrotoxicos():
     cursor.execute(
         "SELECT a.agrotoxico, d.doenca, a.composicao,a.manuseio,a.qtAplicacoes,a.dosagem FROM Agrotoxicos as a inner join Doencas as d on a.doenca = d.id")
@@ -362,7 +347,7 @@ def exportarAgrotoxicos():
     print("Arquivo exportado!")
     sg.popup_ok('Arquivo exportado!')
 
-
+#Funcao para exportar tabela alertas para excel
 def exportarAltas():
     cursor.execute("SELECT temperatura, umidade, data FROM AltaDoDia")
     result = cursor.fetchall()
@@ -373,7 +358,7 @@ def exportarAltas():
     print("Arquivo exportado!")
     sg.popup_ok('Arquivo exportado!')
 
-
+#Funcao de escolha de qual tabela exportar
 def exportarDados(escolha):
     if (escolha == 0):
         exportarTratamentos()
@@ -384,7 +369,7 @@ def exportarDados(escolha):
     else:
         sg.popup_ok('Selecione uma opção Valida')
 
-
+#Funcao para verificar se o ultimo tratamento está ativo
 def verificaTratamentoAtivo():
     id = retornaUltimoRegistroTratamento()
     cursor.execute(f"select ativo from Tratamento where id = {id} ")
@@ -392,7 +377,7 @@ def verificaTratamentoAtivo():
     final = str(result)[2:-3]
     return (final)
 
-
+#Funcao para alterar os ids de doenca para sua descricao
 def alteracaoDoenca(doenca):
     if doenca == 1:
         final = "Pinta Preta"
@@ -402,7 +387,8 @@ def alteracaoDoenca(doenca):
         final = "Ambas"
     return final
 
-
+#Funcao para verificar se existe tratamento ativo, se não tiver, ira verificar se a umidade e a temperatura está alta,
+#se estiver, ira verificar se ja teve verificacao no dia atual se não teve roda a funcao verificaUltimaUmidade
 def atualizaTratamento():
     ativo = verificaTratamentoAtivo()
     if (ativo == "0"):
@@ -411,6 +397,7 @@ def atualizaTratamento():
                 if(retornaUltimaSegundaDataAlerta() != str(date.today())):
                     verificaUltimaUmidade()
 
+#Funcao para verificar se o dia atual é o ultimo do tratamento se não for verifica se é o dia para aplicar o agrotoxico
 def verificaAplicacao():
     if (verificaTratamentoAtivo() == "1"):
         if (str(date.today()) == retornaDataFinalTratamento()):
@@ -429,42 +416,24 @@ def verificaAplicacao():
                 enviarEmailAlertadeIrrigacao()
                 print("Data Atualizada")
 
-
+#Funcao para retornar o id da doenca passada no parametro
 def retornaIdDoenca(doenca):
     cursor.execute(f"select id from Doencas where doenca = '{doenca}' ")
     result = cursor.fetchall()
     final = str(result)[2:-3]
     return (final)
 
-
+#Funcao para retornar os Agrotoxicos cadastrados no banco
 def retornaArrayDeAgrotoxicos(doenca='Ambos'):
     cursor.execute(f"select agrotoxico from Agrotoxicos where doenca = {retornaIdDoenca(doenca)} ")
     result = cursor.fetchall()
     return (result)
 
-
+#Funcao para retornar as doencas cadastradas no banco
 def retornaArrayDeDoencas():
     cursor.execute(f"select doenca from Doencas")
     result = cursor.fetchall()
     return (result)
-
-
-def atualizaTemperaturaUmidade():
-    while True:  # Loop para a conexão com o Arduino
-        try:  # Tenta se conectar, se conseguir, o loop se encerra
-            arduino = serial.Serial('COM6', 9600)
-            print('Arduino conectado')
-            break
-        except:
-            pass
-    while True:  # Loop principal
-        msg = str(arduino.readline())  # Lê os dados em formato de string
-        umidade = int(msg[40:-11])  # Fatia a string, converte para int e atualiza a umidade global
-        print(f"Umidade {umidade}")  # Imprime a mensagem
-        temperatura = int(msg[16:-35])  # Fatia a string, converte para int e atualiza a temperatura global
-        print(f"Temperatura {temperatura}")  # Imprime a mensagem
-        arduino.flush()  # Limpa a comunicação
-
 
 # INICIO INTERFACE
 class MainWindow(QMainWindow, Ui_MainWindow):
@@ -522,12 +491,12 @@ class myThread(threading.Thread):
             print("Exiting " + self.name)
 
 
-# Create new threads
+# Declaração das Threads
 thread1 = myThread(1, "1", 1)
 thread2 = myThread(2, "2", 2)
 thread3 = myThread(3, "3", 3)
 
-# Start new Threads
+# Startando as Threads
 thread1.start()
 thread2.start()
 thread3.start()
