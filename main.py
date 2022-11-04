@@ -6,29 +6,27 @@
 import email.message
 import smtplib
 import sqlite3
+
+from threading import Lock
 import pandas as pd
 import PySimpleGUI as sg
 from datetime import date, timedelta, datetime
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QWidget)
-from front import Ui_MainWindow
-import sys
 import threading
 import serial
 
-#Variaveis globais da umidade e temperatura
+# Variaveis globais
 umidade = 0
 temperatura = 0
 
-#Conexao com o Banco de Dados e declaracao da variavel cursos para manipulação do BD
+
+# Conexao com o Banco de Dados e declaracao da variavel cursos para manipulação do BD
 db = sqlite3.connect('sistemaTCC.db', check_same_thread=False)
 cursor = db.cursor()
-
 
 # Função para enviar email de alerta de irrigação
 def enviarEmailAlertadeIrrigacao():
     corpo_email = """
     <p>Faça uma irrigação do Agrotoxico Hoje</p>
-    <p>Agrotóxico: </p>
     """
 
     msg = email.message.Message()
@@ -46,7 +44,31 @@ def enviarEmailAlertadeIrrigacao():
     s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
     print('Email enviado')
 
-#Funcao para enviar o email ao iniciar um tratamento
+
+def enviarEmailAlertadeIrrigacaoEFinalizacao():
+    corpo_email = """
+    <p>Faça uma irrigação do Agrotoxico Hoje</p>
+    <br><br>
+    <p>FINALIZAÇÃO DO TRATAMENTO</p>
+    """
+
+    msg = email.message.Message()
+    msg['Subject'] = "Alerta de Irrigação"
+    msg['From'] = 'lucas.sansiq@gmail.com'
+    msg['To'] = 'lucas.san12@outlook.com.br'
+    password = 'werxxmsxrubeugii'
+    msg.add_header('Content-Type', 'text/html')
+    msg.set_payload(corpo_email)
+
+    s = smtplib.SMTP('smtp.gmail.com: 587')
+    s.starttls()
+    # Login Credentials for sending the mail
+    s.login(msg['From'], password)
+    s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
+    print('Email enviado')
+
+
+# Funcao para enviar o email ao iniciar um tratamento
 def enviarEmailInicioDeTratamento(agrotoxico):
     corpo_email = printAgrotoxicoEmail(agrotoxico)
 
@@ -65,10 +87,11 @@ def enviarEmailInicioDeTratamento(agrotoxico):
     s.sendmail(msg['From'], [msg['To']], msg.as_string().encode('utf-8'))
     print('Email enviado')
 
+
 # In[ ]:
 
 # Verifica se teve alta no dia anterior, se sim ele insere na mesmo registro e indica o tratamento se não grava um novo registro de alta
-def  verificaUltimaUmidade():
+def verificaUltimaUmidade():
     dataOntem = date.today() - timedelta(1)
     dataOntem = str(dataOntem)
     ultimoRegistro = retornaUltimaDataAlerta()
@@ -77,8 +100,8 @@ def  verificaUltimaUmidade():
         cursor.execute(f"UPDATE Alerta SET segundoAlerta = '{date.today()}' WHERE id = {ultimoID};")
         db.commit()
         print("Atualizou")
-        sg.popup_ok('Inicie agora um Tratamento')
-
+        sg.popup_ok('Possivel Proliferação de Doenças\n\n'
+                    '  Inicie agora um Tratamento')
     else:
         cursor.execute(f"INSERT INTO Alerta (primeiroAlerta) VALUES ('{date.today()}')")
         db.commit()
@@ -92,12 +115,14 @@ def retornaUltimaDataAlerta():
     final = str(result)[3:-4]
     return (final)
 
-#Funcao para retornar a segunda data de alerta do ultimo registro da tabela Alerta
+
+# Funcao para retornar a segunda data de alerta do ultimo registro da tabela Alerta
 def retornaUltimaSegundaDataAlerta():
     cursor.execute("select segundoAlerta from Alerta order by id desc limit 1")
     result = cursor.fetchall()
     final = str(result)[3:-4]
     return (final)
+
 
 # Funcao para retornar data Final do ultimo tratamento registrada na tabela Tratamento
 def retornaDataFinalTratamento():
@@ -114,7 +139,8 @@ def retornaUltimaRegistroAlerta():
     final = str(result)[2:-3]
     return (final)
 
-#Funcao para retornar ID do ultimo registro da Tabela Tratamento
+
+# Funcao para retornar ID do ultimo registro da Tabela Tratamento
 def retornaUltimoRegistroTratamento():
     cursor.execute("select MAX(id) from Tratamento")
     result = cursor.fetchall()
@@ -129,7 +155,8 @@ def retornaUltimoIntervaloDeAplicacoes():
     final = str(result)[1:-1]
     return (final)
 
-#Funcao para retornar a data da proxima aplicacao de um tratamento ativo
+
+# Funcao para retornar a data da proxima aplicacao de um tratamento ativo
 def retornaDataProximaAplicacao():
     id = retornaUltimoRegistroTratamento()
     cursor.execute(f"select dataProximaAplicacao from Tratamento where id = {id}")
@@ -138,32 +165,40 @@ def retornaDataProximaAplicacao():
     return (final)
 
 
+def insereAltadoDia():
+    cursor.execute(
+        f"INSERT INTO AltaDoDia (temperatura,umidade,data) VALUES ({temperatura},{umidade},'{date.today()}');")
+    db.commit()
+
+
 # Função para apresentar ultima temperatura maxima apresentada no bloco "Ultima atualização de Tempo e Umidade"
-def ultimaTemperaturaMaxima():
+
+
+def alteraUltimaTemperaturaMaxima():
     cursor.execute("select temperatura from AltaDoDia order by id desc limit 1")
     result = cursor.fetchall()
-    final = str(result)[2:-3]
-    return (final)
+    global temperaturaMaxima
+    temperaturaMaxima = str(result)[2:-3]
 
 
 # Função para a apresentar ultima umidade maxima apresentada no bloco "Ultima atualização de Tempo e Umidade"
-def ultimaUmidadeMaxima():
+def alteraUltimaUmidadeMaxima():
     cursor.execute("select umidade from AltaDoDia order by id desc limit 1")
     result = cursor.fetchall()
-    final = str(result)[2:-3]
-    return (final)
+    global umidadeMaxima
+    umidadeMaxima = str(result)[2:-3]
 
 
 # Função para apresentar data no bloco "Ultima atualização de Tempo e Umidade"
-def dataDeMaxima():
+def alteraDataDeMaxima():
     cursor.execute("select data from AltaDoDia order by id desc limit 1")
     result = cursor.fetchall()
-    final = str(result)[3:-4]
-    return (final)
+    global dataDeMaxima
+    dataDeMaxima = str(result)[3:-4]
 
 
 # Função para apresentar ultima aplicacao de agrotoxico de um tratamento ativo
-def mostraUltimaAplicacaoNaAcao():
+def alteraUltimaAplicacaoNaAcao():
     cursor.execute("select ativo from Tratamento order by id desc limit 1")
     result = cursor.fetchall()
     ativo = str(result)[2:-3]
@@ -172,11 +207,12 @@ def mostraUltimaAplicacaoNaAcao():
         cursor.execute("select dataFinal from Tratamento order by id desc limit 1")
         result = cursor.fetchall()
         final = str(result)[3:-4]
-    return (final)
+    global ultimaAplicacao
+    ultimaAplicacao = final
 
 
 # Função para apresentar proxima aplicacao de agrotoxico de um tratamento ativo
-def mostraProximaAplicacaoNaAcao():
+def alteraProximaAplicacaoNaAcao():
     cursor.execute("select ativo from Tratamento order by id desc limit 1")
     result = cursor.fetchall()
     ativo = str(result)[2:-3]
@@ -185,11 +221,12 @@ def mostraProximaAplicacaoNaAcao():
         cursor.execute("select dataProximaAplicacao from Tratamento order by id desc limit 1")
         result = cursor.fetchall()
         final = str(result)[3:-4]
-    return (final)
+    global proximaAplicacao
+    proximaAplicacao = final
 
 
 # Função para apresentar inicio do tratamento ativo
-def mostraInicioDaAcao():
+def alteraInicioDaAcao():
     cursor.execute("select ativo from Tratamento order by id desc limit 1")
     result = cursor.fetchall()
     ativo = str(result)[2:-3]
@@ -198,20 +235,20 @@ def mostraInicioDaAcao():
         cursor.execute("select dataInicial from Tratamento order by id desc limit 1")
         result = cursor.fetchall()
         final = str(result)[3:-4]
-    return (final)
+    global inicioTratamento
+    inicioTratamento = final
 
 
 # Função para apresentar agrotoxico do tratamento ativo
-def mostraAgrotoximoDaAcao():
-    cursor.execute("select ativo from Tratamento order by id desc limit 1")
-    result = cursor.fetchall()
-    ativo = str(result)[2:-3]
+def alteraAgrotoxicoDaAcao():
     final = ""
-    if (ativo == "1"):
-        cursor.execute("select agrotoxico from Tratamento order by id desc limit 1")
+    if (verificaTratamentoAtivo() == "1"):
+        cursor.execute(
+            f"SELECT a.agrotoxico FROM Tratamento as t INNER JOIN Agrotoxicos as a on t.agrotoxico = a.id WHERE t.id = {retornaUltimoRegistroTratamento()}")
         result = cursor.fetchall()
         final = str(result)[3:-4]
-    return (final)
+    global agrotoxicoAtivo
+    agrotoxicoAtivo = final
 
 
 # Funcao para retornar a temperatura
@@ -242,10 +279,13 @@ def iniciarTratamento(agrotoxico, tempo=0):
 
     # validacao do do tempo de intervalo entre as aplicacoes
     duracao = 0
+    # Tempo Normal
     if tempo == 0:
         duracao = 8
+    # Tempo Chuvoso
     elif tempo == 1:
         duracao = 7
+    # Tempo Seco
     elif tempo == 2:
         duracao = 10
     else:
@@ -322,7 +362,8 @@ def printAgrotoxico(agrotoxico):
     text = text.replace("</h1>", "")
     return (text)
 
-#Funcao para exportar a tabela tratamentos para excel
+
+# Funcao para exportar a tabela tratamentos para excel
 def exportarTratamentos():
     cursor.execute(
         "SELECT a.agrotoxico, t.dataInicial, t.dataFinal,t.intervaloDeAplicacoes FROM Tratamento as t INNER JOIN Agrotoxicos as a on t.agrotoxico = a.id")
@@ -334,7 +375,8 @@ def exportarTratamentos():
     print("Arquivo exportado!")
     sg.popup_ok('Arquivo exportado!')
 
-#Funcao para exportar agrotoxicos para excel
+
+# Funcao para exportar agrotoxicos para excel
 def exportarAgrotoxicos():
     cursor.execute(
         "SELECT a.agrotoxico, d.doenca, a.composicao,a.manuseio,a.qtAplicacoes,a.dosagem FROM Agrotoxicos as a inner join Doencas as d on a.doenca = d.id")
@@ -347,7 +389,8 @@ def exportarAgrotoxicos():
     print("Arquivo exportado!")
     sg.popup_ok('Arquivo exportado!')
 
-#Funcao para exportar tabela alertas para excel
+
+# Funcao para exportar tabela alertas para excel
 def exportarAltas():
     cursor.execute("SELECT temperatura, umidade, data FROM AltaDoDia")
     result = cursor.fetchall()
@@ -358,7 +401,8 @@ def exportarAltas():
     print("Arquivo exportado!")
     sg.popup_ok('Arquivo exportado!')
 
-#Funcao de escolha de qual tabela exportar
+
+# Funcao de escolha de qual tabela exportar
 def exportarDados(escolha):
     if (escolha == 0):
         exportarTratamentos()
@@ -369,7 +413,8 @@ def exportarDados(escolha):
     else:
         sg.popup_ok('Selecione uma opção Valida')
 
-#Funcao para verificar se o ultimo tratamento está ativo
+
+# Funcao para verificar se o ultimo tratamento está ativo
 def verificaTratamentoAtivo():
     id = retornaUltimoRegistroTratamento()
     cursor.execute(f"select ativo from Tratamento where id = {id} ")
@@ -377,7 +422,8 @@ def verificaTratamentoAtivo():
     final = str(result)[2:-3]
     return (final)
 
-#Funcao para alterar os ids de doenca para sua descricao
+
+# Funcao para alterar os ids de doenca para sua descricao
 def alteracaoDoenca(doenca):
     if doenca == 1:
         final = "Pinta Preta"
@@ -387,67 +433,61 @@ def alteracaoDoenca(doenca):
         final = "Ambas"
     return final
 
-#Funcao para verificar se existe tratamento ativo, se não tiver, ira verificar se a umidade e a temperatura está alta,
-#se estiver, ira verificar se ja teve verificacao no dia atual se não teve roda a funcao verificaUltimaUmidade
+
+# Funcao para verificar se existe tratamento ativo, se não tiver, ira verificar se a umidade e a temperatura está alta,
+# se estiver, ira verificar se ja teve verificacao no dia atual se não teve roda a funcao verificaUltimaUmidade
 def atualizaTratamento():
     ativo = verificaTratamentoAtivo()
     if (ativo == "0"):
         if (umidade >= 70) and (temperatura >= 15):
             if (retornaUltimaDataAlerta() != str(date.today())):
-                if(retornaUltimaSegundaDataAlerta() != str(date.today())):
+                if (retornaUltimaSegundaDataAlerta() != str(date.today())):
+                    insereAltadoDia()
                     verificaUltimaUmidade()
 
-#Funcao para verificar se o dia atual é o ultimo do tratamento se não for verifica se é o dia para aplicar o agrotoxico
+
+# Funcao para verificar se o dia atual é o ultimo do tratamento se não for verifica se é o dia para aplicar o agrotoxico
 def verificaAplicacao():
     if (verificaTratamentoAtivo() == "1"):
         if (str(date.today()) == retornaDataFinalTratamento()):
             print("Aplicar Agrotóxico")
             cursor.execute(f"UPDATE Tratamento SET ativo = {0} WHERE id = {retornaUltimoRegistroTratamento()};")
             db.commit()
-            enviarEmailAlertadeIrrigacao()
+            enviarEmailAlertadeIrrigacaoEFinalizacao()
             print("Tratamento Finalizado")
 
         else:
             if (retornaDataProximaAplicacao() == str(date.today())):
                 print("Aplicar Agrotoxico")
                 atualizaAplicacao = date.today() + timedelta(int(retornaUltimoIntervaloDeAplicacoes()))
-                cursor.execute(f"UPDATE Tratamento SET dataProximaAplicacao = '{atualizaAplicacao}' WHERE id = {retornaUltimoRegistroTratamento()};")
+                cursor.execute(
+                    f"UPDATE Tratamento SET dataProximaAplicacao = '{atualizaAplicacao}' WHERE id = {retornaUltimoRegistroTratamento()};")
                 db.commit()
                 enviarEmailAlertadeIrrigacao()
                 print("Data Atualizada")
 
-#Funcao para retornar o id da doenca passada no parametro
+
+# Funcao para retornar o id da doenca passada no parametro
 def retornaIdDoenca(doenca):
     cursor.execute(f"select id from Doencas where doenca = '{doenca}' ")
     result = cursor.fetchall()
     final = str(result)[2:-3]
     return (final)
 
-#Funcao para retornar os Agrotoxicos cadastrados no banco
+
+# Funcao para retornar os Agrotoxicos cadastrados no banco
 def retornaArrayDeAgrotoxicos(doenca='Ambos'):
     cursor.execute(f"select agrotoxico from Agrotoxicos where doenca = {retornaIdDoenca(doenca)} ")
     result = cursor.fetchall()
     return (result)
 
-#Funcao para retornar as doencas cadastradas no banco
+
+# Funcao para retornar as doencas cadastradas no banco
 def retornaArrayDeDoencas():
     cursor.execute(f"select doenca from Doencas")
     result = cursor.fetchall()
     return (result)
 
-# INICIO INTERFACE
-class MainWindow(QMainWindow, Ui_MainWindow):
-    def __init__(self):
-        super(MainWindow, self).__init__()
-        self.setupUi(self)
-        self.setWindowTitle("Sistema de gerenciamento")
-
-        # PAGINAS DO SISTEMA
-        self.btn_dashbord.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pg_dashbord))
-        self.btn_acao.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pg_acao))
-        self.btn_exportar.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pgexportar))
-
-# FIM INTERFACE
 
 class myThread(threading.Thread):
 
@@ -471,37 +511,30 @@ class myThread(threading.Thread):
                 msg = str(arduino.readline())  # Lê os dados em formato de string
                 global umidade
                 umidade = int(msg[40:-11])  # Fatia a string, converte para int e atualiza a umidade global
-                print(f"Umidade {umidade}")  # Imprime a mensagem
+                print(f"Umidade {umidade}%")  # Imprime a mensagem
                 global temperatura
                 temperatura = int(msg[16:-35])  # Fatia a string, converte para int e atualiza a temperatura global
-                print(f"Temperatura {temperatura}")  # Imprime a mensagem
+                print(f"Temperatura {temperatura}°C")  # Imprime a mensagem
                 arduino.flush()  # Limpa a comunicação
+
         else:
             if (self.name == "2"):
-                app = QApplication(sys.argv)
-                window = MainWindow()
-                window.show()
-                app.exec()
-            else:
-                if (self.name == "3"):
-                    tempNum = 0
-                    while (True):
-                        verificaAplicacao()
-                        atualizaTratamento()
-            print("Exiting " + self.name)
+                while (True):
+                    atualizaTratamento()
+                    verificaAplicacao()
+
+        print("Exiting " + self.name)
 
 
 # Declaração das Threads
 thread1 = myThread(1, "1", 1)
 thread2 = myThread(2, "2", 2)
-thread3 = myThread(3, "3", 3)
+
 
 # Startando as Threads
-thread1.start()
-thread2.start()
-thread3.start()
+def main():
+    thread1.start()
+    thread2.start()
 
-
-
-
+main()
 

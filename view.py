@@ -7,15 +7,18 @@ import email.message
 import smtplib
 import sqlite3
 
-from threading import Lock
 import pandas as pd
 import PySimpleGUI as sg
 from datetime import date, timedelta, datetime
+import time
+import threading
+import serial
 from PyQt5.QtWidgets import (QApplication, QMainWindow)
+
+import front
 from front import Ui_MainWindow
 import sys
 import numpy as np
-
 
 # Variaveis globais
 umidade = 0
@@ -59,7 +62,6 @@ def retornaUltimaUmidadeMaxima():
 
 def retornaDataDeMaxima():
     return (dataDeMaxima)
-
 
 
 # Funcao para enviar o email ao iniciar um tratamento
@@ -253,8 +255,13 @@ def apresentaTemperatura():
 
 # Funcao para retornar a umidade
 def apresentaUmidade():
-    porcentagem = f"{str(umidade)}%"
-    return porcentagem
+    while True:
+        time.sleep(2)
+        global umidade
+        # umidade = int(msg[40:-11])  # Fatia a string, converte para int e atualiza a umidade global
+        # print(f"Umidade {umidade}")  # Imprime a mensagem
+        porcentagem = f"{str(umidade)}%"
+        return porcentagem
 
 
 # Inicia o tratamento, grava no banco o registro do inicio de um tratamento
@@ -453,8 +460,32 @@ def atualizacaoDeCamposUltimaAtualizacao():
     alteraDataDeMaxima()
     alteraAgrotoxicoDaAcao()
 
+
+def atualizaInformacoes():
+    alteraUltimaTemperaturaMaxima()
+    alteraUltimaUmidadeMaxima()
+    alteraDataDeMaxima()
+    alteraAgrotoxicoDaAcao()
+    alteraInicioDaAcao()
+    alteraProximaAplicacaoNaAcao()
+    alteraUltimaAplicacaoNaAcao()
+
+
 # INICIO INTERFACE
 class MainWindow(QMainWindow, Ui_MainWindow):
+
+    def atualizaUltimaAlta(self):
+        alteraUltimaTemperaturaMaxima()
+        alteraUltimaUmidadeMaxima()
+        alteraDataDeMaxima()
+        self.txt_atualizacao.setText(
+            f"Temperatura Maxima: {retornaUltimaTemperaturaMaxima()} \n\nUmidade Máxima: {retornaUltimaUmidadeMaxima()} \n\nData: {retornaDataDeMaxima()}")
+        alteraAgrotoxicoDaAcao()
+        alteraInicioDaAcao()
+        alteraProximaAplicacaoNaAcao()
+        alteraUltimaAplicacaoNaAcao()
+        self.txt_acao.setText(
+            f"Agrotoxico: {retornaAgrotoxicoAtivo()} \n\nInicio do Tratamento: {retornaInicioTratamento()} \n\nPróxima Aplicação: {retornaProximaAplicacao()}\n\nUltima Aplicação: {retornaUltimaAplicacao()}")
 
     def button_clicked(self):
         tempo = 3
@@ -470,7 +501,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         if (tempo == 3):
             sg.popup_ok("Selecione um clima")
         else:
-            iniciarTratamento(agrotoxicoAcao,tempo)
+            iniciarTratamento(agrotoxicoAcao, tempo)
             alteraAgrotoxicoDaAcao()
             alteraInicioDaAcao()
             alteraProximaAplicacaoNaAcao()
@@ -518,15 +549,6 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         else:
             exportarDados(escolha)
 
-    def atualizaInformacoes(self):
-        alteraUltimaTemperaturaMaxima()
-        alteraUltimaUmidadeMaxima()
-        alteraDataDeMaxima()
-        alteraAgrotoxicoDaAcao()
-        alteraInicioDaAcao()
-        alteraProximaAplicacaoNaAcao()
-        alteraUltimaAplicacaoNaAcao()
-
     def __init__(self):
         super(MainWindow, self).__init__()
         self.setupUi(self)
@@ -538,6 +560,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.btn_exportar.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pg_exportar))
 
         # DASHBOARD
+
         self.txt_umidade.setText(apresentaUmidade())
         self.txt_temperatura.setText(apresentaTemperatura())
         self.txt_acao.setText(
@@ -545,35 +568,29 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.txt_atualizacao.setText(
             f"Temperatura Maxima: {retornaUltimaTemperaturaMaxima()} \n\nUmidade Máxima: {retornaUltimaUmidadeMaxima()} \n\nData: {retornaDataDeMaxima()}")
 
+        self.btn_atualizaInformacoes.clicked.connect(self.atualizaUltimaAlta)
+
+
         # TRATAMENTO
-        #Ação do Botão Iniciar Tratamento
+        # Ação do Botão Iniciar Tratamento
         self.btn_iniciarAcao.clicked.connect(self.button_clicked)
 
-        #Preenchimento do combo box de doença
+        # Preenchimento do combo box de doença
         self.cb_doencas.addItem("Pinta Preta")
         self.cb_doencas.addItem("Requeima")
         self.cb_doencas.addItem("Ambos")
 
-        #Ação de alteração do comboBox de agrotoxixos
+        # Ação de alteração do comboBox de agrotoxixos
         self.cb_doencas.currentTextChanged.connect(self.onChanged1)
 
-        #Apresentação no campo texto
+        # Apresentação no campo texto
         self.cb_agrotoxico.currentTextChanged.connect(self.onChanged2)
 
-        #EXPORTAR DADOS
+        # EXPORTAR DADOS
         self.btn_relatorio_2.clicked.connect(self.exportarDados)
 
-
-
-alteraUltimaTemperaturaMaxima()
-alteraUltimaUmidadeMaxima()
-alteraDataDeMaxima()
-alteraAgrotoxicoDaAcao()
-alteraInicioDaAcao()
-alteraProximaAplicacaoNaAcao()
-alteraUltimaAplicacaoNaAcao()
-
+atualizaInformacoes()
 app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
-sys.exit(app.exec())
+app.exec()

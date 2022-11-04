@@ -85,6 +85,18 @@ class Ui_MainWindow(object):
         self.txt_atualizacao.setGeometry(QtCore.QRect(450, 290, 231, 181))
         self.txt_atualizacao.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.txt_atualizacao.setObjectName("txt_atualizacao")
+        self.btn_atualizaInformacoes = QtWidgets.QPushButton(self.pg_dashbord)
+        self.btn_atualizaInformacoes.setGeometry(QtCore.QRect(570, 480, 111, 31))
+        self.btn_atualizaInformacoes.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btn_atualizaInformacoes.setStyleSheet("QPushButton{\n"
+                                           "    color: rgb(255, 255, 255);\n"
+                                           "    border-radius: 3px;\n"
+                                           "    font-size: 16px;\n"
+                                           "    background-color: rgb(0, 80, 121);\n"
+                                           "}\n"
+                                           "\n"
+                                           "QPushButton:hover{background-color: #acacac; color:black; border:2px solid  rgb(0, 80, 121);}")
+        self.btn_atualizaInformacoes.setObjectName("btn_atualizaInformacoes")
         self.txt_acao = QtWidgets.QTextEdit(self.pg_dashbord)
         self.txt_acao.setGeometry(QtCore.QRect(80, 290, 231, 181))
         self.txt_acao.setStyleSheet("background-color: rgb(255, 255, 255);")
@@ -241,6 +253,7 @@ class Ui_MainWindow(object):
         self.btn_dashbord.setText(_translate("MainWindow", "Dashbord"))
         self.btn_acao.setText(_translate("MainWindow", "Ação preventiva"))
         self.btn_exportar.setText(_translate("MainWindow", "Exportar"))
+        self.btn_atualizaInformacoes.setText(_translate("MainWindow","Atualizar"))
         self.txt_temperatura.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
