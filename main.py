@@ -6,6 +6,7 @@
 import email.message
 import smtplib
 import sqlite3
+import time
 
 from threading import Lock
 import pandas as pd
@@ -454,6 +455,7 @@ def verificaAplicacao():
             cursor.execute(f"UPDATE Tratamento SET ativo = {0} WHERE id = {retornaUltimoRegistroTratamento()};")
             db.commit()
             enviarEmailAlertadeIrrigacaoEFinalizacao()
+            sg.popup_ok("Ultima Aplicação")
             print("Tratamento Finalizado")
 
         else:
@@ -464,6 +466,7 @@ def verificaAplicacao():
                     f"UPDATE Tratamento SET dataProximaAplicacao = '{atualizaAplicacao}' WHERE id = {retornaUltimoRegistroTratamento()};")
                 db.commit()
                 enviarEmailAlertadeIrrigacao()
+                sg.popup_ok("Realize a aplicação do Agrotóxico")
                 print("Data Atualizada")
 
 
@@ -520,6 +523,7 @@ class myThread(threading.Thread):
         else:
             if (self.name == "2"):
                 while (True):
+                    time.sleep(5)
                     atualizaTratamento()
                     verificaAplicacao()
 
@@ -535,6 +539,4 @@ thread2 = myThread(2, "2", 2)
 def main():
     thread1.start()
     thread2.start()
-
-main()
 

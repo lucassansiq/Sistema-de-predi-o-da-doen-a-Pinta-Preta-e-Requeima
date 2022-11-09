@@ -6,19 +6,16 @@
 import email.message
 import smtplib
 import sqlite3
-
 import pandas as pd
 import PySimpleGUI as sg
 from datetime import date, timedelta, datetime
 import time
 import threading
-import serial
 from PyQt5.QtWidgets import (QApplication, QMainWindow)
-
-import front
 from front import Ui_MainWindow
 import sys
 import numpy as np
+import main
 
 # Variaveis globais
 umidade = 0
@@ -589,6 +586,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # EXPORTAR DADOS
         self.btn_relatorio_2.clicked.connect(self.exportarDados)
 
+threading.Thread(main.main()).start()
 atualizaInformacoes()
 app = QApplication(sys.argv)
 window = MainWindow()
