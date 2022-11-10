@@ -305,7 +305,7 @@ class Ui_MainWindow(object):
         self.btn_iniciarAcao.setText(_translate("MainWindow", "Iniciar"))
         self.lb_agrotoxicoAcao.setText(_translate("MainWindow", "Agrotóxico:"))
         self.lb_doencas.setText(_translate("MainWindow", "Doenças:"))
-        self.rb_normal.setText(_translate("MainWindow", "Normal"))
+        self.rb_normal.setText(_translate("MainWindow", "Regular"))
         self.rb_chuvoso.setText(_translate("MainWindow", "Chuvoso"))
         self.rb_seco.setText(_translate("MainWindow", "Seco"))
         self.radioButton_4.setText(_translate("MainWindow", "Exportar agrotóxico"))

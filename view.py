@@ -13,6 +13,7 @@ import time
 import threading
 from PyQt5.QtWidgets import (QApplication, QMainWindow)
 from front import Ui_MainWindow
+import front
 import sys
 import numpy as np
 import main
@@ -246,19 +247,14 @@ def alteraAgrotoxicoDaAcao():
 
 # Funcao para retornar a temperatura
 def apresentaTemperatura():
-    porcentagem = f"{str(temperatura)}%"
-    return porcentagem
+    temperatura = f"{str(main.temperatura)}°C"
+    return temperatura
 
 
 # Funcao para retornar a umidade
 def apresentaUmidade():
-    while True:
-        time.sleep(2)
-        global umidade
-        # umidade = int(msg[40:-11])  # Fatia a string, converte para int e atualiza a umidade global
-        # print(f"Umidade {umidade}")  # Imprime a mensagem
-        porcentagem = f"{str(umidade)}%"
-        return porcentagem
+    umidade = f"{str(main.umidade)}%"
+    return umidade
 
 
 # Inicia o tratamento, grava no banco o registro do inicio de um tratamento
@@ -300,6 +296,7 @@ def iniciarTratamento(agrotoxico, tempo=0):
     cursor.execute(
         f"INSERT INTO Tratamento (agrotoxico,dataInicial,dataProximaAplicacao,dataFinal,ativo,intervaloDeAplicacoes) VALUES ({id},'{dataInicio}','{proximaAplicacao}','{dataFinal}',1,{duracao})")
     db.commit()
+    sg.popup_ok("Tratamento Iniciado!")
     print("Inserido!")
 
     enviarEmailInicioDeTratamento(agrotoxico)
@@ -471,6 +468,12 @@ def atualizaInformacoes():
 # INICIO INTERFACE
 class MainWindow(QMainWindow, Ui_MainWindow):
 
+    def atualizaUmidadeETemperatura(self):
+        while (True):
+            time.sleep(2)
+            self.txt_umidade.setText(apresentaUmidade())
+            self.txt_temperatura.setText(apresentaTemperatura())
+
     def atualizaUltimaAlta(self):
         alteraUltimaTemperaturaMaxima()
         alteraUltimaUmidadeMaxima()
@@ -483,6 +486,8 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         alteraUltimaAplicacaoNaAcao()
         self.txt_acao.setText(
             f"Agrotoxico: {retornaAgrotoxicoAtivo()} \n\nInicio do Tratamento: {retornaInicioTratamento()} \n\nPróxima Aplicação: {retornaProximaAplicacao()}\n\nUltima Aplicação: {retornaUltimaAplicacao()}")
+        self.txt_umidade.setText(apresentaUmidade())
+        self.txt_temperatura.setText(apresentaTemperatura())
 
     def button_clicked(self):
         tempo = 3
@@ -505,7 +510,7 @@ class MainWindow(QMainWindow, Ui_MainWindow):
             alteraUltimaAplicacaoNaAcao()
             self.txt_acao.setText(
                 f"Agrotoxico: {retornaAgrotoxicoAtivo()} \n\nInicio do Tratamento: {retornaInicioTratamento()} \n\nPróxima Aplicação: {retornaProximaAplicacao()}\n\nUltima Aplicação: {retornaUltimaAplicacao()}")
-            sg.popup_ok("Tratamento Iniciado")
+
 
     def onChanged1(self):
         opcao = self.cb_doencas.currentText()
@@ -557,16 +562,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         self.btn_exportar.clicked.connect(lambda: self.Pages.setCurrentWidget(self.pg_exportar))
 
         # DASHBOARD
-
         self.txt_umidade.setText(apresentaUmidade())
         self.txt_temperatura.setText(apresentaTemperatura())
-        self.txt_acao.setText(
-            f"Agrotoxico: {retornaAgrotoxicoAtivo()} \n\nInicio do Tratamento: {retornaInicioTratamento()} \n\nPróxima Aplicação: {retornaProximaAplicacao()}\n\nUltima Aplicação: {retornaUltimaAplicacao()}")
-        self.txt_atualizacao.setText(
-            f"Temperatura Maxima: {retornaUltimaTemperaturaMaxima()} \n\nUmidade Máxima: {retornaUltimaUmidadeMaxima()} \n\nData: {retornaDataDeMaxima()}")
 
+        self.txt_acao.setText(f"Agrotoxico: {retornaAgrotoxicoAtivo()} \n\nInicio do Tratamento: {retornaInicioTratamento()} \n\nPróxima Aplicação: {retornaProximaAplicacao()}\n\nUltima Aplicação: {retornaUltimaAplicacao()}")
+        self.txt_atualizacao.setText(f"Temperatura Maxima: {retornaUltimaTemperaturaMaxima()} \n\nUmidade Máxima: {retornaUltimaUmidadeMaxima()} \n\nData: {retornaDataDeMaxima()}")
         self.btn_atualizaInformacoes.clicked.connect(self.atualizaUltimaAlta)
-
 
         # TRATAMENTO
         # Ação do Botão Iniciar Tratamento
@@ -586,9 +587,12 @@ class MainWindow(QMainWindow, Ui_MainWindow):
         # EXPORTAR DADOS
         self.btn_relatorio_2.clicked.connect(self.exportarDados)
 
+
 threading.Thread(main.main()).start()
 atualizaInformacoes()
 app = QApplication(sys.argv)
 window = MainWindow()
 window.show()
 app.exec()
+
+

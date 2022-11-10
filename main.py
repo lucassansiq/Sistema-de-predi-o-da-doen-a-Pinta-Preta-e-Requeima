@@ -153,7 +153,7 @@ def retornaUltimoRegistroTratamento():
 def retornaUltimoIntervaloDeAplicacoes():
     cursor.execute(f"select intervaloDeAplicacoes from Tratamento where id = {retornaUltimoRegistroTratamento()}")
     result = cursor.fetchall()
-    final = str(result)[1:-1]
+    final = str(result)[2:-3]
     return (final)
 
 
@@ -539,4 +539,5 @@ thread2 = myThread(2, "2", 2)
 def main():
     thread1.start()
     thread2.start()
+
 
