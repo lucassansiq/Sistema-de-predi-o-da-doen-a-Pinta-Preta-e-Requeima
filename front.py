@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import threading
 
 # Form implementation generated from reading ui file 'ui_main.ui'
 #
@@ -12,6 +13,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 
 
 class Ui_MainWindow(object):
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
@@ -97,12 +99,24 @@ class Ui_MainWindow(object):
                                            "\n"
                                            "QPushButton:hover{background-color: #acacac; color:black; border:2px solid  rgb(0, 80, 121);}")
         self.btn_atualizaInformacoes.setObjectName("btn_atualizaInformacoes")
+        self.btn_teste = QtWidgets.QPushButton(self.pg_dashbord)
+        self.btn_teste.setGeometry(QtCore.QRect(80, 480, 111, 31))
+        self.btn_teste.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.btn_teste.setStyleSheet("QPushButton{\n"
+                                                   "    color: rgb(255, 255, 255);\n"
+                                                   "    border-radius: 3px;\n"
+                                                   "    font-size: 16px;\n"
+                                                   "    background-color: rgb(0, 80, 121);\n"
+                                                   "}\n"
+                                                   "\n"
+                                                   "QPushButton:hover{background-color: #acacac; color:black; border:2px solid  rgb(0, 80, 121);}")
+        self.btn_teste.setObjectName("btn_teste")
         self.txt_acao = QtWidgets.QTextEdit(self.pg_dashbord)
         self.txt_acao.setGeometry(QtCore.QRect(80, 290, 231, 181))
         self.txt_acao.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.txt_acao.setObjectName("txt_acao")
         self.lb_temperatura = QtWidgets.QLabel(self.pg_dashbord)
-        self.lb_temperatura.setGeometry(QtCore.QRect(160, 20, 91, 18))
+        self.lb_temperatura.setGeometry(QtCore.QRect(160, 20, 150, 18))
         self.lb_temperatura.setStyleSheet("font: 75 8pt \"MS Shell Dlg 2\";\n"
 "font: 11pt \"MS Shell Dlg 2\";")
         self.lb_temperatura.setObjectName("lb_temperatura")
@@ -117,17 +131,17 @@ class Ui_MainWindow(object):
 "font: 11pt \"MS Shell Dlg 2\";")
         self.lb_acao.setObjectName("lb_acao")
         self.lb_atualizacao0 = QtWidgets.QLabel(self.pg_dashbord)
-        self.lb_atualizacao0.setGeometry(QtCore.QRect(510, 230, 121, 20))
+        self.lb_atualizacao0.setGeometry(QtCore.QRect(510, 230, 200, 20))
         self.lb_atualizacao0.setStyleSheet("font: 75 8pt \"MS Shell Dlg 2\";\n"
 "font: 11pt \"MS Shell Dlg 2\";")
         self.lb_atualizacao0.setObjectName("lb_atualizacao0")
         self.lb_atualizacao1 = QtWidgets.QLabel(self.pg_dashbord)
-        self.lb_atualizacao1.setGeometry(QtCore.QRect(560, 250, 21, 16))
+        self.lb_atualizacao1.setGeometry(QtCore.QRect(560, 250, 150, 16))
         self.lb_atualizacao1.setStyleSheet("\n"
 "font: 11pt \"MS Shell Dlg 2\";")
         self.lb_atualizacao1.setObjectName("lb_atualizacao1")
         self.lb_atualizacao2 = QtWidgets.QLabel(self.pg_dashbord)
-        self.lb_atualizacao2.setGeometry(QtCore.QRect(510, 270, 121, 16))
+        self.lb_atualizacao2.setGeometry(QtCore.QRect(510, 270, 200, 16))
         self.lb_atualizacao2.setStyleSheet("\n"
 "font: 11pt \"MS Shell Dlg 2\";")
         self.lb_atualizacao2.setObjectName("lb_atualizacao2")
@@ -135,7 +149,7 @@ class Ui_MainWindow(object):
         self.pg_acao = QtWidgets.QWidget()
         self.pg_acao.setObjectName("pg_acao")
         self.txt_acaoPreventiva = QtWidgets.QTextEdit(self.pg_acao)
-        self.txt_acaoPreventiva.setGeometry(QtCore.QRect(120, 110, 561, 411))
+        self.txt_acaoPreventiva.setGeometry(QtCore.QRect(120, 110, 540, 411))
         self.txt_acaoPreventiva.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.txt_acaoPreventiva.setObjectName("txt_acaoPreventiva")
         self.fr_topbar = QtWidgets.QFrame(self.pg_acao)
@@ -157,55 +171,55 @@ class Ui_MainWindow(object):
 "QPushButton:hover{background-color: #acacac; color:black; border:2px solid  rgb(0, 80, 121);}")
         self.btn_iniciarAcao.setObjectName("btn_iniciarAcao")
         self.lb_agrotoxicoAcao = QtWidgets.QLabel(self.fr_topbar)
-        self.lb_agrotoxicoAcao.setGeometry(QtCore.QRect(20, 50, 73, 18))
-        self.lb_agrotoxicoAcao.setStyleSheet("font: 75 8pt \"MS Shell Dlg 2\";\n"
+        self.lb_agrotoxicoAcao.setGeometry(QtCore.QRect(20, 50, 100, 18))
+        self.lb_agrotoxicoAcao.setStyleSheet("font: 75 7pt \"MS Shell Dlg 2\";\n"
 "font: 11pt \"MS Shell Dlg 2\";")
         self.lb_agrotoxicoAcao.setObjectName("lb_agrotoxicoAcao")
         self.cb_agrotoxico = QtWidgets.QComboBox(self.fr_topbar)
-        self.cb_agrotoxico.setGeometry(QtCore.QRect(100, 50, 141, 21))
+        self.cb_agrotoxico.setGeometry(QtCore.QRect(120, 50, 141, 21))
         self.cb_agrotoxico.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.cb_agrotoxico.setObjectName("cb_agrotoxico")
         self.lb_doencas = QtWidgets.QLabel(self.fr_topbar)
-        self.lb_doencas.setGeometry(QtCore.QRect(32, 11, 61, 18))
+        self.lb_doencas.setGeometry(QtCore.QRect(32, 11, 80, 18))
         self.lb_doencas.setStyleSheet("font: 75 8pt \"MS Shell Dlg 2\";\n"
 "font: 11pt \"MS Shell Dlg 2\";")
         self.lb_doencas.setObjectName("lb_doencas")
         self.cb_doencas = QtWidgets.QComboBox(self.fr_topbar)
-        self.cb_doencas.setGeometry(QtCore.QRect(100, 10, 141, 21))
+        self.cb_doencas.setGeometry(QtCore.QRect(120, 10, 141, 21))
         self.cb_doencas.setStyleSheet("background-color: rgb(255, 255, 255);")
         self.cb_doencas.setObjectName("cb_doencas")
         self.rb_normal = QtWidgets.QRadioButton(self.fr_topbar)
-        self.rb_normal.setGeometry(QtCore.QRect(300, 10, 82, 17))
+        self.rb_normal.setGeometry(QtCore.QRect(300, 10,100, 17))
         self.rb_normal.setStyleSheet("font: 75 8pt \"MS Shell Dlg 2\";\n"
 "font: 10.5pt \"MS Shell Dlg 2\";\n"
 "")
         self.rb_normal.setObjectName("rb_normal")
         self.rb_chuvoso = QtWidgets.QRadioButton(self.fr_topbar)
-        self.rb_chuvoso.setGeometry(QtCore.QRect(300, 30, 82, 17))
+        self.rb_chuvoso.setGeometry(QtCore.QRect(300, 30, 90, 17))
         self.rb_chuvoso.setStyleSheet("font: 10.5pt \"MS Shell Dlg 2\";\n"
 "")
         self.rb_chuvoso.setObjectName("rb_chuvoso")
         self.rb_seco = QtWidgets.QRadioButton(self.fr_topbar)
-        self.rb_seco.setGeometry(QtCore.QRect(300, 50, 82, 17))
+        self.rb_seco.setGeometry(QtCore.QRect(300, 50, 100, 17))
         self.rb_seco.setStyleSheet("font: 10.5pt \"MS Shell Dlg 2\";")
         self.rb_seco.setObjectName("rb_seco")
         self.Pages.addWidget(self.pg_acao)
         self.pg_exportar = QtWidgets.QWidget()
         self.pg_exportar.setObjectName("pg_exportar")
         self.frame_2 = QtWidgets.QFrame(self.pg_exportar)
-        self.frame_2.setGeometry(QtCore.QRect(180, 120, 421, 291))
+        self.frame_2.setGeometry(QtCore.QRect(180, 120, 420, 291))
         self.frame_2.setStyleSheet("border:2.5px solid rgb(0, 80, 121);\n"
 "")
         self.frame_2.setFrameShape(QtWidgets.QFrame.StyledPanel)
         self.frame_2.setFrameShadow(QtWidgets.QFrame.Raised)
         self.frame_2.setObjectName("frame_2")
         self.radioButton_4 = QtWidgets.QRadioButton(self.frame_2)
-        self.radioButton_4.setGeometry(QtCore.QRect(61, 140, 207, 31))
+        self.radioButton_4.setGeometry(QtCore.QRect(61, 140, 280, 31))
         self.radioButton_4.setStyleSheet("font: 16pt \"MS Shell Dlg 2\";\n"
 "border:2.5px solid rgb(0, 80, 121, 0,0);")
         self.radioButton_4.setObjectName("radioButton_4")
         self.radioButton_5 = QtWidgets.QRadioButton(self.frame_2)
-        self.radioButton_5.setGeometry(QtCore.QRect(61, 97, 197, 31))
+        self.radioButton_5.setGeometry(QtCore.QRect(61, 97, 280, 31))
         self.radioButton_5.setStyleSheet("font: 16pt \"MS Shell Dlg 2\";\n"
 "border:2.5px solid rgb(0, 80, 121, 0,0);\n"
 "\n"
@@ -215,8 +229,8 @@ class Ui_MainWindow(object):
 "")
         self.radioButton_5.setObjectName("radioButton_5")
         self.radioButton_6 = QtWidgets.QRadioButton(self.frame_2)
-        self.radioButton_6.setGeometry(QtCore.QRect(61, 183, 228, 31))
-        self.radioButton_6.setStyleSheet("font: 16pt \"MS Shell Dlg 2\";\n"
+        self.radioButton_6.setGeometry(QtCore.QRect(61, 183, 280, 31))
+        self.radioButton_6.setStyleSheet("font: 15pt \"MS Shell Dlg 2\";\n"
 "border:2.5px solid rgb(0, 80, 121, 0,0);")
         self.radioButton_6.setObjectName("radioButton_6")
         self.btn_relatorio_2 = QtWidgets.QPushButton(self.frame_2)
@@ -235,7 +249,7 @@ class Ui_MainWindow(object):
         self.btn_relatorio_2.setObjectName("btn_relatorio_2")
         self.label = QtWidgets.QLabel(self.frame_2)
         self.label.setGeometry(QtCore.QRect(23, 10, 376, 71))
-        self.label.setStyleSheet("font: 75 16pt \"MS Shell Dlg 2\";\n"
+        self.label.setStyleSheet("font: 75 12pt \"MS Shell Dlg 2\";\n"
 "border-radius:3px;\n"
 "border:2.5px solid rgb(0, 80, 121);")
         self.label.setObjectName("label")
@@ -254,6 +268,7 @@ class Ui_MainWindow(object):
         self.btn_acao.setText(_translate("MainWindow", "Ação preventiva"))
         self.btn_exportar.setText(_translate("MainWindow", "Exportar"))
         self.btn_atualizaInformacoes.setText(_translate("MainWindow","Atualizar"))
+        self.btn_teste.setText(_translate("MainWindow", "Teste de alerta"))
         self.txt_temperatura.setHtml(_translate("MainWindow", "<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.0//EN\" \"http://www.w3.org/TR/REC-html40/strict.dtd\">\n"
 "<html><head><meta name=\"qrichtext\" content=\"1\" /><style type=\"text/css\">\n"
 "p, li { white-space: pre-wrap; }\n"
@@ -313,6 +328,7 @@ class Ui_MainWindow(object):
         self.radioButton_6.setText(_translate("MainWindow", "Exportar últimas altas"))
         self.btn_relatorio_2.setText(_translate("MainWindow", "Exportar"))
         self.label.setText(_translate("MainWindow", "Selecione um para que seja exportado"))
+
 
 
 if __name__ == "__main__":

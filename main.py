@@ -533,7 +533,7 @@ class myThread(threading.Thread):
 # Declaração das Threads
 thread1 = myThread(1, "1", 1)
 thread2 = myThread(2, "2", 2)
-
+thread2.setDaemon(True)
 
 # Startando as Threads
 def main():
